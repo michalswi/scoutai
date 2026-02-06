@@ -1,0 +1,52 @@
+{
+  "name": "scoutai",
+  "version": "1.0.0",
+  "description": "Simple TypeScript GUI desktop application",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc && tsc -p tsconfig.main.json",
+    "start": "npm run build && electron .",
+    "dev": "tsc && tsc -p tsconfig.main.json && electron .",
+    "package": "npm run build && electron-builder --mac --arm64 --x64",
+    "package:universal": "npm run build && electron-builder --mac --universal"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "build": {
+    "appId": "com.scoutai.app",
+    "productName": "scoutai",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64", "x64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["arm64", "x64"]
+        }
+      ]
+    },
+    "files": [
+      "dist/**/*",
+      "src/index.html",
+      "src/styles.css",
+      "prompts/**/*",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    }
+  },
+  "dependencies": {
+    "@electron/remote": "^2.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "typescript": "^5.3.3",
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1"
+  }
+}

@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>scoutai</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Google Maps API will be loaded dynamically with user-provided key -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-mode">
+  <button id="themeToggle" class="theme-toggle" title="Toggle Light/Dark Mode">
+    <span class="theme-icon">☀️</span>
+  </button>
+  
+  <div class="app-container">
+    <!-- Tabbed Interface -->
+    <div class="section main-section">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="owrap"><img src="img/logo.png" alt="owrap" class="tab-icon" /> owrap <span id="owrapTabStatus" class="tab-status-light"></span></button>
+        <button class="tab-btn" data-tab="osm">🗺️ OpenStreetMap</button>
+        <button class="tab-btn" data-tab="google">🌎 Google Maps <span id="gmapsTabStatus" class="tab-status-light"></span></button>
+        <button class="tab-btn" data-tab="script">⚡ Shell Executor</button>
+      </div>
+
+      <!-- OSM Tab Content -->
+      <div class="tab-content" id="osm-tab">
+        <div class="search-section">
+          <div class="search-group">
+            <input type="text" id="searchInput" placeholder="Search for a place (e.g., Tokyo, Japan)..." />
+            <button id="searchBtn" class="search-btn">🔍 Search</button>
+          </div>
+          
+          <div class="map-type-group">
+            <label for="mapType">Map Style:</label>
+            <select id="mapType">
+              <option value="street">OpenStreetMap (Street)</option>
+              <option value="dark">Dark Theme</option>
+              <option value="satellite">Google Satellite</option>
+            </select>
+          </div>
+          
+          <div class="coord-group">
+            <input type="number" id="latInput" step="any" placeholder="Latitude" />
+            <input type="number" id="lonInput" step="any" placeholder="Longitude" />
+            <button id="goToCoordBtn" class="coord-btn">📍 Go</button>
+            <button id="savedLocationsBtn" class="saved-locations-btn" title="Show saved location pins">📘 Saved Locations (0)</button>
+            <button id="findMeBtn" class="coord-btn" disabled>📡 Find Me</button>
+          </div>
+        </div>
+
+        <div class="map-container">
+          <div id="map"></div>
+          <button id="mapFullscreenBtn" class="map-fullscreen-btn" title="Toggle Fullscreen">⛶</button>
+          <div class="resize-handle"></div>
+        </div>
+        
+        <div class="map-info">
+          <div class="info-row">
+            <span id="currentCoords">Click on map to get coordinates</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Google Maps Tab Content -->
+      <div class="tab-content" id="google-tab">
+        <div class="google-controls">
+          <div class="collapsible-section">
+            <button id="toggleApiKeyBtn" class="toggle-section-btn" title="Toggle API Key Section">
+              <span class="toggle-icon">▼</span> 🔑 API Key Configuration <span id="apiKeyStatusLight" class="tab-status-light"></span>
+            </button>
+            <div id="apiKeyContent" class="collapsible-content">
+              <div class="api-key-section">
+                <div class="api-key-group">
+                  <input type="text" id="gmapApiKeyInput" placeholder="Enter Google Maps API Key..." />
+                  <button id="saveApiKeyBtn" class="api-key-btn">🔑 Save Key</button>
+                  <button id="removeApiKeyBtn" class="remove-key-btn" title="Remove saved API key">🗑️ Remove</button>
+                </div>
+                <div id="apiKeyStatus" class="api-key-status"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="search-section">
+            <div class="search-group">
+              <input type="text" id="gmapSearchInput" placeholder="Search for a place..." />
+              <button id="gmapSearchBtn" class="search-btn">🔍 Search</button>
+              <button id="gmapClearBtn" class="clear-btn" title="Reset to default view">🔄 Clear</button>
+            </div>
+          </div>
+          
+          <div class="collapsible-section">
+            <button id="toggleDirectionsBtn" class="toggle-section-btn" title="Toggle Directions Section">
+              <span class="toggle-icon">▼</span> 📍 Directions
+            </button>
+            <div id="directionsContent" class="collapsible-content">
+              <div class="route-planning">
+                <div class="route-input-group">
+                  <label>🎯 Start:</label>
+                  <input type="text" id="gmapStart" placeholder="Enter starting point" />
+                </div>
+                <div class="route-input-group">
+                  <label>📍 Destination:</label>
+                  <input type="text" id="gmapEnd" placeholder="Enter destination" />
+                </div>
+                <div class="travel-mode">
+                  <label>Travel Mode:</label>
+                  <select id="travelMode">
+                    <option value="DRIVING">🚗 Driving</option>
+                    <option value="WALKING">🚶 Walking</option>
+                    <option value="BICYCLING">🚴 Bicycling</option>
+                    <option value="TRANSIT">🚌 Transit</option>
+                  </select>
+                </div>
+                <button id="getDirectionsBtn" class="directions-btn">📍 Get Directions</button>
+                <button id="togglePanelSideBtn" class="toggle-panel-side-btn" title="Move panel to other side">⇄ Swap</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="google-maps-container">
+          <div id="directionsPanel" class="directions-panel">
+            <div class="directions-panel-header">
+              <span class="directions-panel-title">📍 Directions</span>
+              <div class="resize-handle-horizontal"></div>
+            </div>
+            <div id="directionsPanelContent" class="directions-panel-content"></div>
+          </div>
+          <div id="googleMap"></div>
+        </div>
+      </div>
+
+      <!-- Shell Executor Tab Content -->
+      <div class="tab-content" id="script-tab">
+        <div class="script-input-section">
+          <textarea id="scriptInput" placeholder="Enter shell command or script...\ne.g., ls -la, date, echo 'Hello World'"></textarea>
+          <div class="button-group">
+            <button id="runScriptBtn" class="run-btn">▶ Run</button>
+            <button id="stopScriptBtn" class="stop-btn" disabled>⏹️ Stop</button>
+            <button id="clearOutputBtn" class="clear-btn">🗑️ Clear Output</button>
+          </div>
+        </div>
+
+        <div class="output-section">
+          <div class="output-header">
+            <span class="output-title">Output</span>
+            <span id="executionTime" class="execution-time"></span>
+          </div>
+          <div id="scriptOutput" class="script-output">
+            <div class="output-placeholder">Ready to execute scripts...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- owrap Tab Content -->
+      <div class="tab-content active" id="owrap-tab">
+        <div class="owrap-main-container">
+          <!-- Left Side Panel -->
+          <div id="owrapLeftPanel" class="owrap-left-panel">
+            <div class="owrap-left-panel-header">
+              <img src="img/logo.png" alt="Logo" class="panel-logo" />
+              <button id="toggleOwrapPanelBtn" class="toggle-owrap-panel-btn" title="Toggle panel">◀</button>
+              <div class="resize-handle-horizontal-left"></div>
+            </div>
+            <div class="owrap-left-panel-content">
+              <div class="sidebar-menu">
+                <div class="sidebar-item" id="toggleSystemMonitorBtn">
+                  <span class="sidebar-icon">🧠</span>
+                  <span class="sidebar-label">Activity Monitor</span>
+                  <span class="toggle-monitor-icon sidebar-arrow">▶</span>
+                </div>
+                <div class="sidebar-item" id="toggleOllamaServiceBtn">
+                  <span class="sidebar-icon">🦙</span>
+                  <span class="sidebar-label">Run Locally</span>
+                  <span id="ollamaServiceStatusLight" class="tab-status-light"></span>
+                  <span class="toggle-ollama-icon sidebar-arrow">▶</span>
+                </div>
+                <div class="sidebar-item" id="toggleOllamaControlsBtn">
+                  <span class="sidebar-icon">⚙️</span>
+                  <span class="sidebar-label">Ollama Controls</span>
+                  <span id="ollamaControlsStatusLight" class="tab-status-light"></span>
+                  <span class="toggle-ollama-controls-icon sidebar-arrow">▶</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Main Content Area -->
+          <div class="owrap-content-area">
+        <!-- Session Tabs -->
+        <button id="toggleOwrapPanelFloatBtn" class="toggle-owrap-panel-btn-float" title="Show panel">▶</button>
+        <div class="session-tabs-container">
+          <div id="sessionTabsBar" class="session-tabs-bar"></div>
+          <button id="addSessionTabBtn" class="add-session-tab-btn" title="New Session">+</button>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls-section">
+          <button id="toggleControlsBtn" class="section-toggle-btn" title="Toggle controls">
+            <span class="toggle-icon">▼</span> session [model] configuration <span class="session-indicator">(per session)</span>
+          </button>
+          <div id="controlsContent" class="section-content">
+            <div class="status-row">
+              <span class="status-label">Current Model:</span>
+              <span id="owrapCurrentModel" class="current-model-text">gemma3:4b</span>
+            </div>
+            
+            <div class="status-row">
+              <span class="status-label">Model:</span>
+              <select id="owrapModelSelect" class="inline-select">
+                <option value="gemma3:4b">gemma3:4b</option>
+              </select>
+              <div style="display: flex; gap: 5px;">
+                <button id="refreshModelsBtn" class="refresh-models-btn">🔄 refresh</button>
+                <button id="modelInfoBtn" class="model-info-btn" title="Model Information">💡 info</button>
+              </div>
+            </div>
+
+            <div class="status-row">
+              <span class="status-label">Temperature:</span>
+              <div class="temperature-control">
+                <input type="range" id="owrapTemperatureSlider" min="0" max="1" step="0.01" value="0.7" aria-label="Temperature slider" />
+                <input type="number" id="owrapTemperatureInput" min="0" max="1" step="0.01" value="0.7" aria-label="Temperature value" />
+                <button id="temperatureInfoBtn" class="model-info-btn" title="Temperature guidance">💡 info</button>
+              </div>
+            </div>
+            
+            <div class="status-row">
+              <span class="status-label">System Prompt:</span>
+              <select id="owrapPromptSelect" class="inline-select">
+                <option value="default">Default</option>
+              </select>
+              <button id="showSysPromptBtn" class="show-prompt-btn">👁️ show prompt</button>
+            </div>
+          </div>
+        </div>
+            
+        <!-- System Monitor -->
+        <div class="system-monitor-section">
+          <div id="systemMonitorContent" class="section-content" style="display: none;">
+            <div class="system-monitor-grid">
+              <div class="monitor-card">
+                <div class="monitor-label">🧠 CPU Usage</div>
+                <div class="monitor-value" id="cpuUsage">--</div>
+                <div class="monitor-details">
+                  <div class="monitor-detail-item"><span class="detail-label">User:</span> <span id="cpuUser">--</span></div>
+                  <div class="monitor-detail-item"><span class="detail-label">System:</span> <span id="cpuSystem">--</span></div>
+                  <div class="monitor-detail-item"><span class="detail-label">Idle:</span> <span id="cpuIdle">--</span></div>
+                </div>
+                <div class="monitor-bar">
+                  <div class="monitor-bar-fill" id="cpuBar"></div>
+                </div>
+              </div>
+              <div class="monitor-card">
+                <div class="monitor-label">💾 Memory</div>
+                <div class="monitor-value" id="ramUsage">--</div>
+                <div class="monitor-details">
+                  <div class="monitor-detail-item"><span class="detail-label">Used:</span> <span id="ramUsed">--</span></div>
+                  <div class="monitor-detail-item"><span class="detail-label">Free:</span> <span id="ramFree">--</span></div>
+                  <div class="monitor-detail-item"><span class="detail-label">Total:</span> <span id="ramTotal">--</span></div>
+                </div>
+                <div class="monitor-bar">
+                  <div class="monitor-bar-fill" id="ramBar"></div>
+                </div>
+              </div>
+              <div class="monitor-card">
+                <div class="monitor-label">🧮 Ollama Process</div>
+                <div class="monitor-details">
+                  <div class="monitor-detail-item"><span class="detail-label">Model name:</span> <span id="ollamaModelName">--</span></div>
+                  <div class="monitor-detail-item"><span class="detail-label">ID:</span> <span id="ollamaModelId">--</span></div>
+                  <div class="monitor-detail-item"><span class="detail-label">Size:</span> <span id="ollamaModelSize">--</span></div>
+                  <div class="monitor-detail-item"><span class="detail-label">Processor:</span> <span id="ollamaModelProcessor">--</span></div>
+                  <div class="monitor-detail-item"><span class="detail-label">Context:</span> <span id="ollamaModelContext">--</span></div>
+                  <div class="monitor-detail-item"><span class="detail-label">Until:</span> <span id="ollamaModelUntil">--</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ollama Service -->
+        <div class="ollama-service-section">
+          <div id="ollamaServiceContent" class="section-content" style="display: none;">
+            <div class="ollama-controls">
+              <button id="startOllamaBtn" class="start-ollama-btn">▶ Start Ollama</button>
+              <button id="stopOllamaBtn" class="stop-ollama-btn" disabled>■ Stop Ollama</button>
+              <span id="ollamaServiceStatus" class="ollama-service-status">stopped</span>
+              <button id="ollamaServiceInfoBtn" class="ollama-url-info-btn" title="How local Ollama works">ℹ️ info</button>
+            </div>
+            <pre id="ollamaLog" class="ollama-log">Logs will appear here when service is started...
+</pre>
+          </div>
+        </div>
+
+        <!-- Ollama Controls -->
+        <div class="ollama-controls-section">
+          <div id="ollamaControlsContent" class="section-content" style="display: none;">
+            <div class="status-row">
+              <span class="status-label">Ollama URL:</span>
+              <div style="display: flex; gap: 5px; flex: 1;">
+                <input type="text" id="ollamaUrlInput" placeholder="http://localhost:11434" value="http://localhost:11434" style="flex: 1; padding: 6px; border: 1px solid var(--input-border); border-radius: 5px; background: var(--input-bg); color: var(--text-primary); font-size: 13px;" />
+                <button id="refreshOllamaStatusBtn" class="refresh-ollama-btn green" title="Refresh Ollama status">🔄 refresh</button>
+                <button id="ollamaUrlInfoBtn" class="ollama-url-info-btn" title="Ollama URL Help">💡 info</button>
+              </div>
+            </div>
+            
+            <div class="status-row">
+              <span class="status-label">Ollama Status:</span>
+              <div class="status-indicator-inline">
+                <div class="status-light" id="owrapOllamaStatus"></div>
+                <span id="owrapOllamaText">Checking...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="owrap-chat-container">
+          <div id="owrapChatLog" class="owrap-chat-log"></div>
+        </div>
+
+        <div class="owrap-input-section">
+          <div class="recent-prompts-row">
+            <label for="recentPromptsSelect">Recent <span class="recent-prompts-info">(keeps last 20)</span></label>
+            <select id="recentPromptsSelect" class="recent-prompts-select">
+              <option value="">-- Select a recent prompt --</option>
+            </select>
+            <button id="clearRecentPromptsBtn" class="clear-recent-prompts-btn" title="Clear recent prompts">Clear prompts</button>
+          </div>
+          <textarea id="owrapInput" placeholder="Type your message here..."></textarea>
+          <div class="owrap-button-group">
+            <button id="owrapInfoBtn" class="owrap-info-btn" title="Button explanations">ℹ️ Info</button>
+            <button id="owrapSendBtn" class="owrap-send-btn">📤 Send</button>
+            <button id="owrapFocusModeBtn" class="owrap-focus-btn" title="Toggle Focus Mode - Hide controls and show only chat">🎯 Focus</button>
+            <button id="owrapFitBtn" class="owrap-fit-btn">📐 Fit</button>
+            <button id="owrapSaveBtn" class="owrap-save-btn">💾 Save</button>
+            <button id="owrapLoadBtn" class="owrap-load-btn">📂 Load</button>
+            <button id="owrapNewSessionBtn" class="owrap-newsession-btn">🆕 NewS</button>
+            <button id="owrapClearBtn" class="owrap-clear-btn">🗑️ Clear Chat</button>
+          </div>
+        </div>
+          </div><!-- End owrap-content-area -->
+        </div><!-- End owrap-main-container -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Temperature Info Modal -->
+  <div id="temperatureInfoModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Temperature Guidance</h2>
+        <button class="modal-close" id="closeTemperatureInfoModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <ul style="line-height: 1.8; margin-left: 20px;">
+          <li><strong>0.0–0.3</strong>: Best for code analysis, security audits, bug finding (deterministic)</li>
+          <li><strong>0.4–0.7</strong>: Good for documentation, explanations, suggestions (balanced)</li>
+          <li><strong>0.8–1.0</strong>: More exploratory and creative, higher variance</li>
+        </ul>
+        <p style="margin-top: 10px;">Tip: start at 0.7 for balanced answers, lower it when you need strict, repeatable output.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ollama URL Info Modal -->
+  <div id="ollamaUrlInfoModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Ollama URL Configuration</h2>
+        <button class="modal-close" id="closeOllamaUrlInfoModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p><strong>How it works:</strong></p>
+        <ul style="line-height: 1.8; margin-left: 20px;">
+          <li><strong>Default:</strong> <code>http://localhost:11434</code> - Connects to Ollama running on your local machine</li>
+          <li><strong>Remote:</strong> <code>http://192.168.1.100:11434</code> - Connect to Ollama on another machine in your network</li>
+          <li><strong>Custom port:</strong> If Ollama runs on a different port, change <code>11434</code> to your port</li>
+          <li><strong>Note:</strong> URL resets to localhost on app restart (not saved)</li>
+        </ul>
+        <p style="margin-top: 15px;"><strong>Quick tips:</strong></p>
+        <ul style="line-height: 1.8; margin-left: 20px;">
+          <li>Press Enter or click 🔄 Refresh to update connection</li>
+          <li>Status will show "Ready" when connected, or error message if failed</li>
+          <li>Make sure Ollama is running on the target machine</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ollama Service Info Modal -->
+  <div id="ollamaServiceInfoModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>How Local Ollama Works</h2>
+        <button class="modal-close" id="closeOllamaServiceInfoModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p><strong>What it does:</strong></p>
+        <p style="margin-left: 20px; line-height: 1.6;">Starts the local Ollama server (<code>ollama serve</code>) so chat requests go to <code>http://localhost:11434</code>.</p>
+        
+        <p style="margin-top: 15px;"><strong>Pulling models:</strong></p>
+        <p style="margin-left: 20px; line-height: 1.6;">If a model is missing, you have two options:</p>
+        <ul style="margin-left: 40px; line-height: 1.6;">
+          <li>Use <code>ollama pull &lt;model&gt;</code> in terminal, or</li>
+          <li>Click the 📥 <strong>Pull</strong> button in 'session [model] configuration' → Model section → 💡info (only available when Ollama is running locally)</li>
+          <li>Hit the 🔄 <strong>refresh models</strong> button after pulling to update the list</li>
+        </ul>
+        
+        <p style="margin-top: 15px;"><strong>Tip:</strong></p>
+        <p style="margin-left: 20px; line-height: 1.6;">Leave this off if you already run Ollama elsewhere and just point the URL in 'Ollama Controls' → Ollama URL to that host.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Saved Locations Modal -->
+  <div id="savedLocationsModal" class="modal">
+    <div class="modal-content saved-locations-modal">
+      <div class="modal-header">
+        <h2>Saved Locations</h2>
+        <button class="modal-close" id="closeSavedLocationsModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="savedLocationsList" class="saved-locations-list">
+          <div class="saved-locations-empty">No saved locations yet.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Model Info Modal -->
+  <div id="modelInfoModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Recommended Ollama Models</h2>
+        <button class="modal-close" id="closeModelInfoModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="model-info-item">
+          <h3><a href="https://ollama.com/library/wizardlm2" target="_blank">wizardlm2:7b</a></h3>
+          <p class="model-description">multilingual, reasoning and agent use cases</p>
+          <div class="model-specs">
+            <span class="spec-badge"><strong>Size:</strong> 4.1GB</span>
+            <span class="spec-badge"><strong>Context:</strong> 32k</span>
+            <span class="spec-badge"><strong>Input:</strong> text</span>
+          </div>
+          <button class="model-pull-btn" data-model="wizardlm2:7b" title="Pull this model">📥 Pull</button>
+        </div>
+        <div class="model-info-item">
+          <h3><a href="https://ollama.com/library/gemma3" target="_blank">gemma3:4b</a></h3>
+          <p class="model-description">vision + cloud</p>
+          <div class="model-specs">
+            <span class="spec-badge"><strong>Size:</strong> 3.3GB</span>
+            <span class="spec-badge"><strong>Context:</strong> 128k</span>
+            <span class="spec-badge"><strong>Input:</strong> text, image</span>
+          </div>
+          <button class="model-pull-btn" data-model="gemma3:4b" title="Pull this model">📥 Pull</button>
+        </div>
+        <div class="model-info-item">
+          <h3><a href="https://ollama.com/library/mistral" target="_blank">mistral:7b</a></h3>
+          <p class="model-description">tools</p>
+          <div class="model-specs">
+            <span class="spec-badge"><strong>Size:</strong> 4.4GB</span>
+            <span class="spec-badge"><strong>Context:</strong> 32k</span>
+            <span class="spec-badge"><strong>Input:</strong> text</span>
+          </div>
+          <button class="model-pull-btn" data-model="mistral:7b" title="Pull this model">📥 Pull</button>
+        </div>
+        <div class="model-info-item">
+          <h3><a href="https://ollama.com/library/llama3.2" target="_blank">llama3.2:3b</a></h3>
+          <p class="model-description">tools</p>
+          <div class="model-specs">
+            <span class="spec-badge"><strong>Size:</strong> 2.0GB</span>
+            <span class="spec-badge"><strong>Context:</strong> 128k</span>
+            <span class="spec-badge"><strong>Input:</strong> text</span>
+          </div>
+          <button class="model-pull-btn" data-model="llama3.2:3b" title="Pull this model">📥 Pull</button>
+        </div>
+        <div class="model-info-item">
+          <h3><a href="https://ollama.com/library/codellama" target="_blank">codellama:7b</a></h3>
+          <p class="model-description">code</p>
+          <div class="model-specs">
+            <span class="spec-badge"><strong>Size:</strong> 3.8GB</span>
+            <span class="spec-badge"><strong>Context:</strong> 16k</span>
+            <span class="spec-badge"><strong>Input:</strong> text</span>
+          </div>
+          <button class="model-pull-btn" data-model="codellama:7b" title="Pull this model">📥 Pull</button>
+        </div>
+        <div class="model-info-item">
+          <h3><a href="https://ollama.com/SpeakLeash/bielik-4.5b-v3.0-instruct" target="_blank">SpeakLeash/bielik-4.5b-v3.0-instruct:Q8_0</a></h3>
+          <p class="model-description">experimental</p>
+          <div class="model-specs">
+            <span class="spec-badge"><strong>Size:</strong> 5.1GB</span>
+            <span class="spec-badge"><strong>Context:</strong> 8k</span>
+            <span class="spec-badge"><strong>Input:</strong> text</span>
+          </div>
+          <button class="model-pull-btn" data-model="SpeakLeash/bielik-4.5b-v3.0-instruct:Q8_0" title="Pull this model">📥 Pull</button>
+        </div>               
+        <div class="model-info-item">
+          <h3><a href="https://ollama.com/library/glm-4.7-flash" target="_blank">glm-4.7-flash</a></h3>
+          <p class="model-description">tools + thinking</p>
+          <div class="model-specs">
+            <span class="spec-badge">Size info not available</span>
+          </div>
+          <button class="model-pull-btn" data-model="glm-4.7-flash" title="Pull this model">📥 Pull</button>
+        </div>
+        <div class="model-info-item">
+          <h3><a href="https://ollama.com/library/deepseek-r1" target="_blank">deepseek-r1:8b</a></h3>
+          <p class="model-description">tools + thinking</p>
+          <div class="model-specs">
+            <span class="spec-badge"><strong>Size:</strong> 5.2GB</span>
+            <span class="spec-badge"><strong>Context:</strong> 128k</span>
+            <span class="spec-badge"><strong>Input:</strong> text</span>
+          </div>
+          <button class="model-pull-btn" data-model="deepseek-r1:8b" title="Pull this model">📥 Pull</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buttons Help Modal -->
+  <div id="buttonsHelpModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Button Guide</h2>
+        <button class="modal-close" id="closeButtonsHelpModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="button-help-item">
+          <div class="button-help-icon">📤</div>
+          <div class="button-help-text">
+            <h4>Send</h4>
+            <p>Send your message to the AI model. You can also press <strong>Enter</strong> in the input field.</p>
+          </div>
+        </div>
+        <div class="button-help-item">
+          <div class="button-help-icon">🎯</div>
+          <div class="button-help-text">
+            <h4>Focus</h4>
+            <p>Toggle Focus Mode - hides all controls and shows only the chat and input. Perfect for distraction-free conversations.</p>
+          </div>
+        </div>
+        <div class="button-help-item">
+          <div class="button-help-icon">📐</div>
+          <div class="button-help-text">
+            <h4>Fit</h4>
+            <p>Reset the chat window to its default size. Useful after manually resizing the chat area.</p>
+          </div>
+        </div>
+        <div class="button-help-item">
+          <div class="button-help-icon">💾</div>
+          <div class="button-help-text">
+            <h4>Save</h4>
+            <p>Save the current session's chat history to a JSON file on your computer.</p>
+          </div>
+        </div>
+        <div class="button-help-item">
+          <div class="button-help-icon">📂</div>
+          <div class="button-help-text">
+            <h4>Load</h4>
+            <p>Load a previously saved chat history from a JSON file into the current session.</p>
+          </div>
+        </div>
+        <div class="button-help-item">
+          <div class="button-help-icon">🆕</div>
+          <div class="button-help-text">
+            <h4>NewS</h4>
+            <p>Create a new session tab. Each session has its own chat history and model configuration.</p>
+          </div>
+        </div>
+        <div class="button-help-item">
+          <div class="button-help-icon">🗑️</div>
+          <div class="button-help-text">
+            <h4>Clear Chat</h4>
+            <p>Clear all messages in the current session. This action cannot be undone.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Copyright © 2049 michalswi</p>
+  </footer>
+
+  <script src="../dist/renderer.js"></script>
+</body>
+</html>
