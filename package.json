@@ -33,6 +33,7 @@
       "dist/**/*",
       "src/index.html",
       "src/styles.css",
+      "src/img/**/*",
       "prompts/**/*",
       "node_modules/**/*"
     ],
