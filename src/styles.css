@@ -1992,6 +1992,38 @@ footer {
   transform: none;
 }
 
+.owrap-info-btn:disabled,
+.owrap-focus-btn:disabled,
+.owrap-fit-btn:disabled,
+.owrap-save-btn:disabled,
+.owrap-load-btn:disabled,
+.owrap-newsession-btn:disabled,
+.owrap-clear-btn:disabled {
+  background: #888 !important;
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  pointer-events: none;
+}
+
+.owrap-stop-btn {
+  flex: 0.8;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.owrap-stop-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+}
+
 .owrap-fit-btn {
   padding: 12px 20px;
   background: #3b82f6;

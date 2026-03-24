@@ -2285,6 +2285,8 @@ class OwrapApp {
   private chatLog: HTMLDivElement;
   private input: HTMLTextAreaElement;
   private sendBtn: HTMLButtonElement;
+  private stopBtn: HTMLButtonElement;
+  private abortController: AbortController | null = null;
   private infoBtn: HTMLButtonElement;
   private focusModeBtn: HTMLButtonElement;
   private fitBtn: HTMLButtonElement;
@@ -2373,6 +2375,7 @@ class OwrapApp {
     this.chatLog = document.getElementById('owrapChatLog') as HTMLDivElement;
     this.input = document.getElementById('owrapInput') as HTMLTextAreaElement;
     this.sendBtn = document.getElementById('owrapSendBtn') as HTMLButtonElement;
+    this.stopBtn = document.getElementById('owrapStopBtn') as HTMLButtonElement;
     this.infoBtn = document.getElementById('owrapInfoBtn') as HTMLButtonElement;
     this.focusModeBtn = document.getElementById('owrapFocusModeBtn') as HTMLButtonElement;
     this.fitBtn = document.getElementById('owrapFitBtn') as HTMLButtonElement;
@@ -2613,6 +2616,11 @@ Never include backticks, comments, or extra keys.`;
 
   private setupEventListeners(): void {
     this.sendBtn.addEventListener('click', () => this.sendMessage());
+    this.stopBtn.addEventListener('click', () => {
+      if (this.abortController) {
+        this.abortController.abort();
+      }
+    });
     this.fitBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -3909,9 +3917,17 @@ Never include backticks, comments, or extra keys.`;
     // Add to recent prompts
     this.addToRecentPrompts(userMessage);
 
-    // Disable send button
+    // Disable all buttons, show Stop
     this.sendBtn.disabled = true;
     this.sendBtn.textContent = '⏳ Thinking...';
+    this.stopBtn.style.display = '';
+    this.infoBtn.disabled = true;
+    this.focusModeBtn.disabled = true;
+    this.fitBtn.disabled = true;
+    this.saveBtn.disabled = true;
+    this.loadBtn.disabled = true;
+    this.newSessionBtn.disabled = true;
+    this.clearBtn.disabled = true;
 
     // Add user message to chat and history only once
     this.addMessage('user', userMessage);
@@ -3920,6 +3936,7 @@ Never include backticks, comments, or extra keys.`;
     // Track timing
     const startTime = Date.now();
 
+    this.abortController = new AbortController();
     try {
       // Prepare messages for Ollama
       // Only send user/assistant history to the model; skip internal system notices
@@ -3937,6 +3954,7 @@ Never include backticks, comments, or extra keys.`;
         headers: {
           'Content-Type': 'application/json'
         },
+        signal: this.abortController.signal,
         body: JSON.stringify({
           model: session.model,
           messages: chatMessages,
@@ -3970,11 +3988,24 @@ Never include backticks, comments, or extra keys.`;
       }
 
     } catch (error: any) {
-      this.addMessage('system', `Error: ${error.message}`);
-      console.error('Ollama API error:', error);
+      if (error.name === 'AbortError') {
+        this.addMessage('system', 'Request stopped.');
+      } else {
+        this.addMessage('system', `Error: ${error.message}`);
+        console.error('Ollama API error:', error);
+      }
     } finally {
+      this.abortController = null;
       this.sendBtn.disabled = false;
       this.sendBtn.textContent = '📤 Send';
+      this.stopBtn.style.display = 'none';
+      this.infoBtn.disabled = false;
+      this.focusModeBtn.disabled = false;
+      this.fitBtn.disabled = false;
+      this.saveBtn.disabled = false;
+      this.loadBtn.disabled = false;
+      this.newSessionBtn.disabled = false;
+      this.clearBtn.disabled = false;
     }
   }
 
