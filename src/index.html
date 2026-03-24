@@ -221,8 +221,8 @@
             <div class="status-row">
               <span class="status-label">Temperature:</span>
               <div class="temperature-control">
-                <input type="range" id="owrapTemperatureSlider" min="0" max="1" step="0.01" value="0.7" aria-label="Temperature slider" />
-                <input type="number" id="owrapTemperatureInput" min="0" max="1" step="0.01" value="0.7" aria-label="Temperature value" />
+                <input type="range" id="owrapTemperatureSlider" min="0" max="1" step="0.01" value="0.4" aria-label="Temperature slider" />
+                <input type="number" id="owrapTemperatureInput" min="0" max="1" step="0.01" value="0.4" aria-label="Temperature value" />
                 <button id="temperatureInfoBtn" class="model-info-btn" title="Temperature guidance">💡 info</button>
               </div>
             </div>
@@ -283,6 +283,44 @@
         <!-- Ollama Service -->
         <div class="ollama-service-section">
           <div id="ollamaServiceContent" class="section-content" style="display: none;">
+            <!-- Env var configuration -->
+            <div class="ollama-env-panel">
+              <div class="ollama-env-header" id="ollamaEnvToggle" title="Configure environment variables passed to ollama serve">
+                ⚙️ Environment Variables <span id="ollamaEnvChevron" style="font-style:normal;">▶</span>
+              </div>
+              <div id="ollamaEnvBody" style="display:none;">
+                <table class="ollama-env-table">
+                  <thead><tr><th>Enable</th><th>Variable</th><th>Value</th></tr></thead>
+                  <tbody>
+                    <tr>
+                      <td><input type="checkbox" id="envOLLAMA_NUM_PARALLEL" /></td>
+                      <td><label for="envOLLAMA_NUM_PARALLEL">OLLAMA_NUM_PARALLEL</label></td>
+                      <td><input type="text" id="envValOLLAMA_NUM_PARALLEL" value="5" class="ollama-env-input" /></td>
+                    </tr>
+                    <tr>
+                      <td><input type="checkbox" id="envOLLAMA_CONTEXT_LENGTH" /></td>
+                      <td><label for="envOLLAMA_CONTEXT_LENGTH">OLLAMA_CONTEXT_LENGTH</label></td>
+                      <td><input type="text" id="envValOLLAMA_CONTEXT_LENGTH" value="8192" class="ollama-env-input" /></td>
+                    </tr>
+                    <tr>
+                      <td><input type="checkbox" id="envOLLAMA_KEEP_ALIVE" /></td>
+                      <td><label for="envOLLAMA_KEEP_ALIVE">OLLAMA_KEEP_ALIVE</label></td>
+                      <td><input type="text" id="envValOLLAMA_KEEP_ALIVE" value="-1" class="ollama-env-input" /></td>
+                    </tr>
+                    <tr>
+                      <td><input type="checkbox" id="envOLLAMA_KV_CACHE_TYPE" /></td>
+                      <td><label for="envOLLAMA_KV_CACHE_TYPE">OLLAMA_KV_CACHE_TYPE</label></td>
+                      <td><input type="text" id="envValOLLAMA_KV_CACHE_TYPE" value="q8_0" class="ollama-env-input" /></td>
+                    </tr>
+                    <tr>
+                      <td><input type="checkbox" id="envOLLAMA_FLASH_ATTENTION" /></td>
+                      <td><label for="envOLLAMA_FLASH_ATTENTION">OLLAMA_FLASH_ATTENTION</label></td>
+                      <td><input type="text" id="envValOLLAMA_FLASH_ATTENTION" value="1" class="ollama-env-input" /></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
             <div class="ollama-controls">
               <button id="startOllamaBtn" class="start-ollama-btn">▶ Start Ollama</button>
               <button id="stopOllamaBtn" class="stop-ollama-btn" disabled>■ Stop Ollama</button>
@@ -439,7 +477,7 @@
       <div class="modal-body">
         <div class="model-info-item">
           <h3><a href="https://ollama.com/library/wizardlm2" target="_blank">wizardlm2:7b</a></h3>
-          <p class="model-description">multilingual, reasoning and agent use cases</p>
+          <p class="model-description">Initial release - April 15, 2024</p>
           <div class="model-specs">
             <span class="spec-badge"><strong>Size:</strong> 4.1GB</span>
             <span class="spec-badge"><strong>Context:</strong> 32k</span>
@@ -448,8 +486,28 @@
           <button class="model-pull-btn" data-model="wizardlm2:7b" title="Pull this model">📥 Pull</button>
         </div>
         <div class="model-info-item">
+          <h3><a href="https://ollama.com/library/qwen3.5" target="_blank">qwen3.5:4b</a></h3>
+          <p class="model-description">Initial release - Feb 16, 2026</p>
+          <div class="model-specs">
+            <span class="spec-badge"><strong>Size:</strong> 3.4GB</span>
+            <span class="spec-badge"><strong>Context:</strong> 256k</span>
+            <span class="spec-badge"><strong>Input:</strong> text, image</span>
+          </div>
+          <button class="model-pull-btn" data-model="qwen3.5:4b" title="Pull this model">📥 Pull</button>
+        </div>
+        <div class="model-info-item">
+          <h3><a href="https://ollama.com/library/qwen3.5" target="_blank">qwen3.5:9b</a></h3>
+          <p class="model-description">Initial release - Feb 16, 2026</p>
+          <div class="model-specs">
+            <span class="spec-badge"><strong>Size:</strong> 6.6GB</span>
+            <span class="spec-badge"><strong>Context:</strong> 256k</span>
+            <span class="spec-badge"><strong>Input:</strong> text, image</span>
+          </div>
+          <button class="model-pull-btn" data-model="qwen3.5:9b" title="Pull this model">📥 Pull</button>
+        </div>
+        <div class="model-info-item">
           <h3><a href="https://ollama.com/library/gemma3" target="_blank">gemma3:4b</a></h3>
-          <p class="model-description">vision + cloud</p>
+          <p class="model-description">Initial release - March 12, 2025</p>
           <div class="model-specs">
             <span class="spec-badge"><strong>Size:</strong> 3.3GB</span>
             <span class="spec-badge"><strong>Context:</strong> 128k</span>
@@ -458,8 +516,18 @@
           <button class="model-pull-btn" data-model="gemma3:4b" title="Pull this model">📥 Pull</button>
         </div>
         <div class="model-info-item">
+          <h3><a href="https://ollama.com/library/gemma3" target="_blank">gemma3:12b</a></h3>
+          <p class="model-description">Initial release - March 12, 2025</p>
+          <div class="model-specs">
+            <span class="spec-badge"><strong>Size:</strong> 8.1GB</span>
+            <span class="spec-badge"><strong>Context:</strong> 128k</span>
+            <span class="spec-badge"><strong>Input:</strong> text, image</span>
+          </div>
+          <button class="model-pull-btn" data-model="gemma3:12b" title="Pull this model">📥 Pull</button>
+        </div>
+        <div class="model-info-item">
           <h3><a href="https://ollama.com/library/mistral" target="_blank">mistral:7b</a></h3>
-          <p class="model-description">tools</p>
+          <p class="model-description">Initial release - September 27, 2023</p>
           <div class="model-specs">
             <span class="spec-badge"><strong>Size:</strong> 4.4GB</span>
             <span class="spec-badge"><strong>Context:</strong> 32k</span>
@@ -469,7 +537,7 @@
         </div>
         <div class="model-info-item">
           <h3><a href="https://ollama.com/library/llama3.2" target="_blank">llama3.2:3b</a></h3>
-          <p class="model-description">tools</p>
+          <p class="model-description">Initial release - September 25, 2024</p>
           <div class="model-specs">
             <span class="spec-badge"><strong>Size:</strong> 2.0GB</span>
             <span class="spec-badge"><strong>Context:</strong> 128k</span>
@@ -479,7 +547,7 @@
         </div>
         <div class="model-info-item">
           <h3><a href="https://ollama.com/library/codellama" target="_blank">codellama:7b</a></h3>
-          <p class="model-description">code</p>
+          <p class="model-description">Initial release - August 2023</p>
           <div class="model-specs">
             <span class="spec-badge"><strong>Size:</strong> 3.8GB</span>
             <span class="spec-badge"><strong>Context:</strong> 16k</span>
@@ -489,7 +557,7 @@
         </div>
         <div class="model-info-item">
           <h3><a href="https://ollama.com/SpeakLeash/bielik-4.5b-v3.0-instruct" target="_blank">SpeakLeash/bielik-4.5b-v3.0-instruct:Q8_0</a></h3>
-          <p class="model-description">experimental</p>
+          <p class="model-description">Initial release - May 2025</p>
           <div class="model-specs">
             <span class="spec-badge"><strong>Size:</strong> 5.1GB</span>
             <span class="spec-badge"><strong>Context:</strong> 8k</span>
@@ -498,16 +566,16 @@
           <button class="model-pull-btn" data-model="SpeakLeash/bielik-4.5b-v3.0-instruct:Q8_0" title="Pull this model">📥 Pull</button>
         </div>               
         <div class="model-info-item">
-          <h3><a href="https://ollama.com/library/glm-4.7-flash" target="_blank">glm-4.7-flash</a></h3>
-          <p class="model-description">tools + thinking</p>
+          <h3><a href="https://ollama.com/library/glm-4.7-flash" target="_blank">glm-4.7-flash:q4_K_M</a></h3>
+          <p class="model-description">Initial release - January 19, 2026</p>
           <div class="model-specs">
             <span class="spec-badge">Size info not available</span>
           </div>
-          <button class="model-pull-btn" data-model="glm-4.7-flash" title="Pull this model">📥 Pull</button>
+          <button class="model-pull-btn" data-model="glm-4.7-flash:q4_K_M" title="Pull this model">📥 Pull</button>
         </div>
         <div class="model-info-item">
           <h3><a href="https://ollama.com/library/deepseek-r1" target="_blank">deepseek-r1:8b</a></h3>
-          <p class="model-description">tools + thinking</p>
+          <p class="model-description">Initial release - January 20, 2025</p>
           <div class="model-specs">
             <span class="spec-badge"><strong>Size:</strong> 5.2GB</span>
             <span class="spec-badge"><strong>Context:</strong> 128k</span>

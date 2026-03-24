@@ -911,6 +911,50 @@ header h1 {
 .start-ollama-btn { background: linear-gradient(135deg,#10b981,#059669); color: #fff; }
 .stop-ollama-btn { background: #ef4444; color: #fff; }
 .ollama-service-status { margin-left: 6px; color: var(--text-secondary); font-weight:600; }
+
+/* Env vars panel */
+.ollama-env-panel {
+  margin-bottom: 10px;
+  border: 1px solid var(--input-border, #333);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.ollama-env-header {
+  padding: 7px 12px;
+  background: var(--tab-bg, #1e1e2e);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #aaa);
+  user-select: none;
+}
+.ollama-env-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  background: var(--input-bg, #161622);
+}
+.ollama-env-table th {
+  padding: 5px 10px;
+  color: var(--text-secondary, #888);
+  font-weight: 600;
+  text-align: left;
+  border-bottom: 1px solid var(--input-border, #333);
+}
+.ollama-env-table td {
+  padding: 5px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: var(--text-primary);
+}
+.ollama-env-table tr:last-child td { border-bottom: none; }
+.ollama-env-input {
+  width: 100px;
+  padding: 3px 6px;
+  border: 1px solid var(--input-border, #333);
+  border-radius: 4px;
+  background: var(--tab-bg, #1e1e2e);
+  color: var(--text-primary);
+  font-size: 12px;
+}
 .ollama-log {
   background: var(--tab-bg);
   color: var(--text-primary);
