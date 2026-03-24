@@ -446,6 +446,45 @@
           <li>Hit the 🔄 <strong>refresh models</strong> button after pulling to update the list</li>
         </ul>
         
+        <p style="margin-top: 15px;"><strong>Environment Variables:</strong></p>
+        <p style="margin-left: 20px; line-height: 1.6;">Use the ⚙️ <strong>Environment Variables</strong> panel to pass custom settings to <code>ollama serve</code>. Enable a variable by ticking its checkbox before starting Ollama.</p>
+        <table style="margin: 10px 20px; border-collapse: collapse; font-size: 13px; width: calc(100% - 40px);">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+              <th style="text-align: left; padding: 4px 8px;">Variable</th>
+              <th style="text-align: left; padding: 4px 8px;">Default</th>
+              <th style="text-align: left; padding: 4px 8px;">Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding: 4px 8px;"><code>OLLAMA_NUM_PARALLEL</code></td>
+              <td style="padding: 4px 8px;">5</td>
+              <td style="padding: 4px 8px;">Number of parallel requests processed simultaneously.</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 8px;"><code>OLLAMA_CONTEXT_LENGTH</code></td>
+              <td style="padding: 4px 8px;">8192</td>
+              <td style="padding: 4px 8px;">Context window size (tokens). Larger values use more VRAM.</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 8px;"><code>OLLAMA_KEEP_ALIVE</code></td>
+              <td style="padding: 4px 8px;">-1</td>
+              <td style="padding: 4px 8px;">How long a model stays loaded after last request (<code>-1</code> = forever, <code>0</code> = unload immediately, e.g. <code>5m</code>).</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 8px;"><code>OLLAMA_KV_CACHE_TYPE</code></td>
+              <td style="padding: 4px 8px;">q8_0</td>
+              <td style="padding: 4px 8px;">KV cache quantization type. <code>q8_0</code> reduces VRAM usage with minimal quality loss; <code>f16</code> for full precision.</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 8px;"><code>OLLAMA_FLASH_ATTENTION</code></td>
+              <td style="padding: 4px 8px;">1</td>
+              <td style="padding: 4px 8px;">Enables Flash Attention for faster inference and lower memory usage (<code>1</code> = on, <code>0</code> = off).</td>
+            </tr>
+          </tbody>
+        </table>
+
         <p style="margin-top: 15px;"><strong>Tip:</strong></p>
         <p style="margin-left: 20px; line-height: 1.6;">Leave this off if you already run Ollama elsewhere and just point the URL in 'Ollama Controls' → Ollama URL to that host.</p>
       </div>
