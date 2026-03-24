@@ -2242,7 +2242,16 @@ class OwrapApp {
           if (msg.duration !== undefined) {
             const timingDiv = document.createElement('div');
             timingDiv.className = 'message-timing';
-            timingDiv.textContent = `⏱️ ${msg.duration.toFixed(2)}s`;
+            const _td = msg.duration;
+            const _th = Math.floor(_td / 3600);
+            const _tm = Math.floor((_td % 3600) / 60);
+            const _ts = (_td % 60).toFixed(2);
+            const durationLabel = _th > 0
+              ? `${_th}h ${_tm}m ${_ts}s`
+              : _tm > 0
+                ? `${_tm}m ${_ts}s`
+                : `${_ts}s`;
+            timingDiv.textContent = `⏱️ ${durationLabel}`;
             timingDiv.style.cssText = `
               font-size: 11px;
               color: var(--text-secondary, #888);
@@ -2263,7 +2272,7 @@ class OwrapApp {
   private ollamaUrlInput: HTMLInputElement | null = null;
   private refreshOllamaStatusBtn: HTMLButtonElement | null = null;
   private model: string = 'wizardlm2:7b';
-  private temperature: number = 0.7;
+  private temperature: number = 0.4;
   private statusLight: HTMLElement;
   private statusText: HTMLElement;
   private currentModelDisplay: HTMLElement;
@@ -2276,6 +2285,8 @@ class OwrapApp {
   private chatLog: HTMLDivElement;
   private input: HTMLTextAreaElement;
   private sendBtn: HTMLButtonElement;
+  private stopBtn: HTMLButtonElement;
+  private abortController: AbortController | null = null;
   private infoBtn: HTMLButtonElement;
   private focusModeBtn: HTMLButtonElement;
   private fitBtn: HTMLButtonElement;
@@ -2364,6 +2375,7 @@ class OwrapApp {
     this.chatLog = document.getElementById('owrapChatLog') as HTMLDivElement;
     this.input = document.getElementById('owrapInput') as HTMLTextAreaElement;
     this.sendBtn = document.getElementById('owrapSendBtn') as HTMLButtonElement;
+    this.stopBtn = document.getElementById('owrapStopBtn') as HTMLButtonElement;
     this.infoBtn = document.getElementById('owrapInfoBtn') as HTMLButtonElement;
     this.focusModeBtn = document.getElementById('owrapFocusModeBtn') as HTMLButtonElement;
     this.fitBtn = document.getElementById('owrapFitBtn') as HTMLButtonElement;
@@ -2604,6 +2616,11 @@ Never include backticks, comments, or extra keys.`;
 
   private setupEventListeners(): void {
     this.sendBtn.addEventListener('click', () => this.sendMessage());
+    this.stopBtn.addEventListener('click', () => {
+      if (this.abortController) {
+        this.abortController.abort();
+      }
+    });
     this.fitBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -2646,6 +2663,19 @@ Never include backticks, comments, or extra keys.`;
     }
     if (this.startOllamaBtn) this.startOllamaBtn.addEventListener('click', () => this.startOllama());
     if (this.stopOllamaBtn) this.stopOllamaBtn.addEventListener('click', () => this.stopOllama());
+
+    // Env vars panel toggle
+    const ollamaEnvToggle = document.getElementById('ollamaEnvToggle');
+    const ollamaEnvBody = document.getElementById('ollamaEnvBody');
+    const ollamaEnvChevron = document.getElementById('ollamaEnvChevron');
+    if (ollamaEnvToggle && ollamaEnvBody) {
+      ollamaEnvToggle.style.cursor = 'pointer';
+      ollamaEnvToggle.addEventListener('click', () => {
+        const open = ollamaEnvBody.style.display !== 'none';
+        ollamaEnvBody.style.display = open ? 'none' : 'block';
+        if (ollamaEnvChevron) ollamaEnvChevron.textContent = open ? '▶' : '▼';
+      });
+    }
     if (this.ollamaUrlInput) {
       this.ollamaUrlInput.addEventListener('change', () => this.updateOllamaUrl());
       this.ollamaUrlInput.addEventListener('blur', () => this.updateOllamaUrl());
@@ -2926,7 +2956,7 @@ Never include backticks, comments, or extra keys.`;
   }
 
   private clampTemperature(value: number): number {
-    if (!Number.isFinite(value)) return 0.7;
+    if (!Number.isFinite(value)) return 0.4;
     return Math.min(1, Math.max(0, value));
   }
 
@@ -3559,6 +3589,27 @@ Never include backticks, comments, or extra keys.`;
       
       console.log('Starting Ollama with path:', ollamaPath);
       const env = Object.assign({}, process.env /*, { OLLAMA_HOST: '0.0.0.0' } */); // OLLAMA_HOST intentionally disabled
+
+      // Inject any user-enabled env vars from the panel
+      const ollamaEnvVars = [
+        'OLLAMA_NUM_PARALLEL',
+        'OLLAMA_CONTEXT_LENGTH',
+        'OLLAMA_KEEP_ALIVE',
+        'OLLAMA_KV_CACHE_TYPE',
+        'OLLAMA_FLASH_ATTENTION',
+      ];
+      for (const varName of ollamaEnvVars) {
+        const checkbox = document.getElementById(`env${varName}`) as HTMLInputElement | null;
+        const input = document.getElementById(`envVal${varName}`) as HTMLInputElement | null;
+        if (checkbox?.checked && input) {
+          const val = input.value.trim();
+          if (val !== '') {
+            (env as Record<string, string>)[varName] = val;
+            this.appendOllamaLog(`  ${varName}=${val}`);
+          }
+        }
+      }
+
       this.ollamaProcess = spawn(ollamaPath, ['serve'], { env });
       this.ollamaIsExternal = false;
       if (this.ollamaServiceStatusEl) this.ollamaServiceStatusEl.textContent = 'starting...';
@@ -3799,7 +3850,7 @@ Never include backticks, comments, or extra keys.`;
         ...history
       ];
 
-      const temperature = this.clampTemperature(session.temperature ?? this.temperature ?? 0.7);
+      const temperature = this.clampTemperature(session.temperature ?? this.temperature ?? 0.4);
 
       // Call Ollama API
       const response = await fetch(`${this.ollamaUrl}/api/chat`, {
@@ -3866,9 +3917,17 @@ Never include backticks, comments, or extra keys.`;
     // Add to recent prompts
     this.addToRecentPrompts(userMessage);
 
-    // Disable send button
+    // Disable all buttons, show Stop
     this.sendBtn.disabled = true;
     this.sendBtn.textContent = '⏳ Thinking...';
+    this.stopBtn.style.display = '';
+    this.infoBtn.disabled = true;
+    this.focusModeBtn.disabled = true;
+    this.fitBtn.disabled = true;
+    this.saveBtn.disabled = true;
+    this.loadBtn.disabled = true;
+    this.newSessionBtn.disabled = true;
+    this.clearBtn.disabled = true;
 
     // Add user message to chat and history only once
     this.addMessage('user', userMessage);
@@ -3877,6 +3936,7 @@ Never include backticks, comments, or extra keys.`;
     // Track timing
     const startTime = Date.now();
 
+    this.abortController = new AbortController();
     try {
       // Prepare messages for Ollama
       // Only send user/assistant history to the model; skip internal system notices
@@ -3886,7 +3946,7 @@ Never include backticks, comments, or extra keys.`;
         ...history
       ];
 
-      const temperature = this.clampTemperature(session.temperature ?? this.temperature ?? 0.7);
+      const temperature = this.clampTemperature(session.temperature ?? this.temperature ?? 0.4);
 
       // Call Ollama API
       const response = await fetch(`${this.ollamaUrl}/api/chat`, {
@@ -3894,6 +3954,7 @@ Never include backticks, comments, or extra keys.`;
         headers: {
           'Content-Type': 'application/json'
         },
+        signal: this.abortController.signal,
         body: JSON.stringify({
           model: session.model,
           messages: chatMessages,
@@ -3927,11 +3988,24 @@ Never include backticks, comments, or extra keys.`;
       }
 
     } catch (error: any) {
-      this.addMessage('system', `Error: ${error.message}`);
-      console.error('Ollama API error:', error);
+      if (error.name === 'AbortError') {
+        this.addMessage('system', 'Request stopped.');
+      } else {
+        this.addMessage('system', `Error: ${error.message}`);
+        console.error('Ollama API error:', error);
+      }
     } finally {
+      this.abortController = null;
       this.sendBtn.disabled = false;
       this.sendBtn.textContent = '📤 Send';
+      this.stopBtn.style.display = 'none';
+      this.infoBtn.disabled = false;
+      this.focusModeBtn.disabled = false;
+      this.fitBtn.disabled = false;
+      this.saveBtn.disabled = false;
+      this.loadBtn.disabled = false;
+      this.newSessionBtn.disabled = false;
+      this.clearBtn.disabled = false;
     }
   }
 
@@ -4048,7 +4122,7 @@ Never include backticks, comments, or extra keys.`;
     // Update global model and prompt to match session
     this.model = session.model;
     this.currentPrompt = session.prompt;
-    this.temperature = this.clampTemperature(session.temperature ?? this.temperature ?? 0.7);
+    this.temperature = this.clampTemperature(session.temperature ?? this.temperature ?? 0.4);
     session.temperature = this.temperature;
     
     // Check if this is OSM session and disable input
@@ -4433,7 +4507,7 @@ Never include backticks, comments, or extra keys.`;
         
         // Update session data from file
         existingSession.model = chatData.model || this.model;
-        existingSession.temperature = this.clampTemperature(chatData.temperature ?? existingSession.temperature ?? this.temperature ?? 0.7);
+        existingSession.temperature = this.clampTemperature(chatData.temperature ?? existingSession.temperature ?? this.temperature ?? 0.4);
         existingSession.prompt = chatData.prompt || this.currentPrompt;
         existingSession.promptSelection = chatData.promptSelection || this.promptSelect.value;
         existingSession.messages = chatData.messages || [];
@@ -4448,7 +4522,7 @@ Never include backticks, comments, or extra keys.`;
           sessionNumber,
           customName,
           model: chatData.model || this.model,
-          temperature: this.clampTemperature(chatData.temperature ?? this.temperature ?? 0.7),
+          temperature: this.clampTemperature(chatData.temperature ?? this.temperature ?? 0.4),
           prompt: chatData.prompt || this.currentPrompt,
           promptSelection: chatData.promptSelection || this.promptSelect.value,
           messages: chatData.messages || [],

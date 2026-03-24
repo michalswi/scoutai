@@ -911,6 +911,50 @@ header h1 {
 .start-ollama-btn { background: linear-gradient(135deg,#10b981,#059669); color: #fff; }
 .stop-ollama-btn { background: #ef4444; color: #fff; }
 .ollama-service-status { margin-left: 6px; color: var(--text-secondary); font-weight:600; }
+
+/* Env vars panel */
+.ollama-env-panel {
+  margin-bottom: 10px;
+  border: 1px solid var(--input-border, #333);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.ollama-env-header {
+  padding: 7px 12px;
+  background: var(--tab-bg, #1e1e2e);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #aaa);
+  user-select: none;
+}
+.ollama-env-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  background: var(--input-bg, #161622);
+}
+.ollama-env-table th {
+  padding: 5px 10px;
+  color: var(--text-secondary, #888);
+  font-weight: 600;
+  text-align: left;
+  border-bottom: 1px solid var(--input-border, #333);
+}
+.ollama-env-table td {
+  padding: 5px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: var(--text-primary);
+}
+.ollama-env-table tr:last-child td { border-bottom: none; }
+.ollama-env-input {
+  width: 100px;
+  padding: 3px 6px;
+  border: 1px solid var(--input-border, #333);
+  border-radius: 4px;
+  background: var(--tab-bg, #1e1e2e);
+  color: var(--text-primary);
+  font-size: 12px;
+}
 .ollama-log {
   background: var(--tab-bg);
   color: var(--text-primary);
@@ -1946,6 +1990,38 @@ footer {
   background: #ccc;
   cursor: not-allowed;
   transform: none;
+}
+
+.owrap-info-btn:disabled,
+.owrap-focus-btn:disabled,
+.owrap-fit-btn:disabled,
+.owrap-save-btn:disabled,
+.owrap-load-btn:disabled,
+.owrap-newsession-btn:disabled,
+.owrap-clear-btn:disabled {
+  background: #888 !important;
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  pointer-events: none;
+}
+
+.owrap-stop-btn {
+  flex: 0.8;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.owrap-stop-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
 }
 
 .owrap-fit-btn {
