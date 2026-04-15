@@ -2662,7 +2662,7 @@ Never include backticks, comments, or extra keys.`;
         if (popover.style.display === 'none' || !popover.style.display) {
           const used = this.lastPromptTokens + this.lastResponseTokens;
           const session = this.sessions.get(this.currentSessionId);
-          const max = session?.ollamaContext ?? 8192;
+          const max = session?.ollamaContext ?? 32768;
           const pct = max > 0 ? Math.round((used / max) * 100) : 0;
           this.renderContextPopover(used, max, pct);
           popover.style.display = 'block';
@@ -2677,7 +2677,7 @@ Never include backticks, comments, or extra keys.`;
     if (this.contextLengthInput) {
       this.contextLengthInput.addEventListener('change', () => {
         const v = parseInt(this.contextLengthInput!.value, 10);
-        const val = isNaN(v) || v <= 0 ? 8192 : v;
+        const val = isNaN(v) || v <= 0 ? 32768 : v;
         this.contextLengthInput!.value = String(val);
         const session = this.sessions.get(this.currentSessionId);
         if (session) session.ollamaContext = val;
@@ -3436,7 +3436,7 @@ Never include backticks, comments, or extra keys.`;
     const used = this.lastPromptTokens + this.lastResponseTokens;
     // Use the current session's ollamaContext as the denominator
     const session = this.sessions.get(this.currentSessionId);
-    const max = session?.ollamaContext ?? 8192;
+    const max = session?.ollamaContext ?? 32768;
     if (max === 0) {
       this.contextWindowBtn.textContent = '📊';
       this.contextWindowBtn.title = 'Context window: unknown';
@@ -3902,7 +3902,7 @@ Never include backticks, comments, or extra keys.`;
       customName: '🔌 API Session',
       model: this.modelSelect?.value || this.model,
       temperature: this.clampTemperature(this.temperature),
-      ollamaContext: 8192,
+      ollamaContext: 32768,
       prompt: this.currentPrompt || this.getDefaultPrompt(),
       promptSelection: this.promptSelect?.value || 'default',
       messages: [] as Array<{ role: string; content: string; timestamp?: number; duration?: number }>,
@@ -3943,7 +3943,7 @@ Never include backticks, comments, or extra keys.`;
 
     session.autoSaveInterval = setInterval(() => {
       this.autoSaveSession(sessionId);
-    }, 60000);
+    }, 10000);
 
     return sessionId;
   }
@@ -4058,7 +4058,7 @@ Never include backticks, comments, or extra keys.`;
       customName: '📍 OSM Locations',
       model: this.modelSelect?.value || this.model,
       temperature: this.clampTemperature(this.temperature),
-      ollamaContext: 8192,
+      ollamaContext: 32768,
       prompt: 'You are a helpful assistant specialized in providing information about locations, places, cities, and geographic features. Answer questions naturally and concisely. When asked about places, provide useful information about attractions, history, culture, and practical tips.',
       promptSelection: 'osm_locations',
       messages: [] as Array<{role: string, content: string, timestamp?: number, duration?: number}>,
@@ -4109,7 +4109,7 @@ Never include backticks, comments, or extra keys.`;
     // Start auto-save for this session
     session.autoSaveInterval = setInterval(() => {
       this.autoSaveSession(sessionId);
-    }, 60000);
+    }, 10000);
     
     // Switch to this session
     this.switchToSession(sessionId);
@@ -4356,7 +4356,7 @@ Never include backticks, comments, or extra keys.`;
       customName: undefined,
       model: inheritedModel,
       temperature: inheritedTemperature,
-      ollamaContext: 8192,
+      ollamaContext: 32768,
       prompt: inheritedPrompt,
       promptSelection: inheritedPromptSelection,
       messages: [] as Array<{role: string, content: string, timestamp?: number, duration?: number}>,
@@ -4406,7 +4406,7 @@ Never include backticks, comments, or extra keys.`;
     // Start auto-save for this session
     session.autoSaveInterval = setInterval(() => {
       this.autoSaveSession(sessionId);
-    }, 60000);
+    }, 10000);
     
     // Switch to the new session
     this.switchToSession(sessionId);
@@ -4446,7 +4446,7 @@ Never include backticks, comments, or extra keys.`;
     this.promptSelect.value = session.promptSelection;
     this.setTemperatureControls(this.temperature);
     if (this.contextLengthInput) {
-      this.contextLengthInput.value = String(session.ollamaContext ?? 8192);
+      this.contextLengthInput.value = String(session.ollamaContext ?? 32768);
     }
     this.updateContextWindowBtn();
     
@@ -4815,7 +4815,7 @@ Never include backticks, comments, or extra keys.`;
         // Update session data from file
         existingSession.model = chatData.model || this.model;
         existingSession.temperature = this.clampTemperature(chatData.temperature ?? existingSession.temperature ?? this.temperature ?? 0.4);
-        existingSession.ollamaContext = chatData.ollamaContext ?? existingSession.ollamaContext ?? 8192;
+        existingSession.ollamaContext = chatData.ollamaContext ?? existingSession.ollamaContext ?? 32768;
         existingSession.prompt = chatData.prompt || this.currentPrompt;
         existingSession.promptSelection = chatData.promptSelection || this.promptSelect.value;
         existingSession.messages = chatData.messages || [];
@@ -4831,7 +4831,7 @@ Never include backticks, comments, or extra keys.`;
           customName,
           model: chatData.model || this.model,
           temperature: this.clampTemperature(chatData.temperature ?? this.temperature ?? 0.4),
-          ollamaContext: chatData.ollamaContext ?? 8192,
+          ollamaContext: chatData.ollamaContext ?? 32768,
           prompt: chatData.prompt || this.currentPrompt,
           promptSelection: chatData.promptSelection || this.promptSelect.value,
           messages: chatData.messages || [],
@@ -4881,7 +4881,7 @@ Never include backticks, comments, or extra keys.`;
         // Start auto-save for the loaded session
         newSession.autoSaveInterval = setInterval(() => {
           this.autoSaveSession(sessionId);
-        }, 60000);
+        }, 10000);
       }
       
       // Switch to the session (whether it's new or reloaded)

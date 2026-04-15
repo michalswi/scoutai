@@ -229,7 +229,7 @@
 
             <div class="status-row">
               <span class="status-label" title="Match your OLLAMA_CONTEXT_LENGTH setting (per session)">Ollama context:</span>
-              <input type="number" id="owrapContextLengthInput" min="512" step="512" value="8192" title="Context window size — match OLLAMA_CONTEXT_LENGTH (per session)" style="width:90px; padding:4px 6px; border:1px solid var(--input-border); border-radius:5px; background:var(--input-bg); color:var(--text-primary); font-size:13px;" />
+              <input type="number" id="owrapContextLengthInput" min="512" step="512" value="32768" title="Context window size — match OLLAMA_CONTEXT_LENGTH (per session)" style="width:90px; padding:4px 6px; border:1px solid var(--input-border); border-radius:5px; background:var(--input-bg); color:var(--text-primary); font-size:13px;" />
             </div>
             
             <div class="status-row">
@@ -305,7 +305,7 @@
                     <tr>
                       <td><input type="checkbox" id="envOLLAMA_CONTEXT_LENGTH" /></td>
                       <td><label for="envOLLAMA_CONTEXT_LENGTH">OLLAMA_CONTEXT_LENGTH</label></td>
-                      <td><input type="text" id="envValOLLAMA_CONTEXT_LENGTH" value="8192" class="ollama-env-input" /></td>
+                      <td><input type="text" id="envValOLLAMA_CONTEXT_LENGTH" value="32768" class="ollama-env-input" /></td>
                     </tr>
                     <tr>
                       <td><input type="checkbox" id="envOLLAMA_KEEP_ALIVE" /></td>
@@ -315,7 +315,7 @@
                     <tr>
                       <td><input type="checkbox" id="envOLLAMA_KV_CACHE_TYPE" /></td>
                       <td><label for="envOLLAMA_KV_CACHE_TYPE">OLLAMA_KV_CACHE_TYPE</label></td>
-                      <td><input type="text" id="envValOLLAMA_KV_CACHE_TYPE" value="q8_0" class="ollama-env-input" /></td>
+                      <td><input type="text" id="envValOLLAMA_KV_CACHE_TYPE" value="f16" class="ollama-env-input" /></td>
                     </tr>
                     <tr>
                       <td><input type="checkbox" id="envOLLAMA_FLASH_ATTENTION" /></td>
@@ -474,7 +474,7 @@
             </tr>
             <tr>
               <td style="padding: 4px 8px;"><code>OLLAMA_CONTEXT_LENGTH</code></td>
-              <td style="padding: 4px 8px;">8192</td>
+              <td style="padding: 4px 8px;">32768</td>
               <td style="padding: 4px 8px;">Context window size (tokens). Larger values use more VRAM.</td>
             </tr>
             <tr>
@@ -484,8 +484,8 @@
             </tr>
             <tr>
               <td style="padding: 4px 8px;"><code>OLLAMA_KV_CACHE_TYPE</code></td>
-              <td style="padding: 4px 8px;">q8_0</td>
-              <td style="padding: 4px 8px;">KV cache quantization type. <code>q8_0</code> reduces VRAM usage with minimal quality loss; <code>f16</code> for full precision.</td>
+              <td style="padding: 4px 8px;">f16</td>
+              <td style="padding: 4px 8px;">KV cache quantization type. <code>f16</code> for full precision; <code>q8_0</code> reduces VRAM usage with minimal quality loss.</td>
             </tr>
             <tr>
               <td style="padding: 4px 8px;"><code>OLLAMA_FLASH_ATTENTION</code></td>

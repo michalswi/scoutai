@@ -19,7 +19,7 @@ Standalone desktop copilot that blends local Ollama chat, multi-map intelligence
 
 The status light will turn green when connected (visible in ***owrap tab*** and ***Ollama Controls*** section).
 
-**Context Window**: owrap tracks context window usage per session via the `📊` button in the chat toolbar. Each session has an ***Ollama context*** field (default `8192`) in the ***session [model] configuration*** section. **This value must match the `OLLAMA_CONTEXT_LENGTH` you used when starting Ollama.** If they differ, the percentage shown will be incorrect.
+**Context Window**: owrap tracks context window usage per session via the `📊` button in the chat toolbar. Each session has an ***Ollama context*** field (default `32768`) in the ***session [model] configuration*** section. **This value must match the `OLLAMA_CONTEXT_LENGTH` you used when starting Ollama.** If they differ, the percentage shown will be incorrect.
 
 Example — if you start Ollama with:
 ```bash
