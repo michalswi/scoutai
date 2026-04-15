@@ -13,5 +13,5 @@
     "moduleResolution": "node"
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "src/main.ts"]
+  "exclude": ["node_modules", "src/main.ts", "src/api-server.ts"]
 }

@@ -2452,6 +2452,15 @@ class OwrapApp {
     
     // Check status every 10 seconds
     setInterval(() => this.checkOllamaStatus(), 10000);
+
+    // Register IPC listener for API chat requests from the API server
+    const _ipcRenderer = require('electron').ipcRenderer;
+    _ipcRenderer.on('api-chat-request', (_event: any, payload: any) => {
+      this.handleApiChatRequest(payload);
+    });
+
+    // Push owrap state to the API server every 2 seconds
+    setInterval(() => this.pushApiState(), 2000);
     
     // Start system monitoring
     this.startSystemMonitoring();
@@ -3746,6 +3755,169 @@ Never include backticks, comments, or extra keys.`;
       this.renderMessages();
     }
   }
+
+  // ── owrap API helpers ──────────────────────────────────────────────────────
+
+  private pushApiState(): void {
+    try {
+      const ipcRenderer = require('electron').ipcRenderer;
+      const models: string[] = Array.from(this.modelSelect.options).map((o: any) => (o as HTMLOptionElement).value).filter(Boolean);
+      ipcRenderer.send('owrap-state-update', {
+        ollamaConnected: this.statusLight.classList.contains('ready'),
+        ollamaUrl: this.ollamaUrl,
+        activeModel: this.model,
+        temperature: this.temperature,
+        activePromptFile: this.promptSelect?.value || 'default',
+        models,
+      });
+    } catch (e) { /* IPC unavailable in some contexts */ }
+  }
+
+  private getOrCreateApiSession(): number {
+    for (const [sessionId, session] of this.sessions.entries()) {
+      if (session.customName === '🔌 API Session') {
+        return sessionId;
+      }
+    }
+
+    const sessionNumber = this.nextSessionNumber++;
+    const sessionId = Date.now();
+
+    const session = {
+      sessionNumber,
+      customName: '🔌 API Session',
+      model: this.modelSelect?.value || this.model,
+      temperature: this.clampTemperature(this.temperature),
+      prompt: this.currentPrompt || this.getDefaultPrompt(),
+      promptSelection: this.promptSelect?.value || 'default',
+      messages: [] as Array<{ role: string; content: string; timestamp?: number; duration?: number }>,
+      autoSaveInterval: null as any,
+      lastAutoSaveTime: 0,
+    };
+
+    this.sessions.set(sessionId, session);
+
+    const tab = document.createElement('div');
+    tab.className = 'session-tab';
+    tab.dataset.sessionId = String(sessionId);
+
+    const tabLabel = document.createElement('span');
+    tabLabel.className = 'session-tab-label';
+    tabLabel.textContent = '🔌 API Session';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'session-tab-close';
+    closeBtn.textContent = '✕';
+    closeBtn.title = 'Close session';
+
+    tab.appendChild(tabLabel);
+    tab.appendChild(closeBtn);
+
+    tab.addEventListener('click', (e) => {
+      if (!(e.target as HTMLElement).classList.contains('session-tab-close')) {
+        this.switchToSession(sessionId);
+      }
+    });
+
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.closeSessionTab(sessionId);
+    });
+
+    this.sessionTabsBar.appendChild(tab);
+
+    session.autoSaveInterval = setInterval(() => {
+      this.autoSaveSession(sessionId);
+    }, 60000);
+
+    return sessionId;
+  }
+
+  private addMessageToSession(sessionId: number, role: string, content: string, extra?: { duration?: number }): void {
+    const session = this.sessions.get(sessionId);
+    if (!session) return;
+    session.messages.push({ role, content, timestamp: Date.now(), ...extra });
+    if (sessionId === this.currentSessionId) {
+      this.renderMessages();
+    }
+  }
+
+  private async handleApiChatRequest(payload: {
+    id: string;
+    message: string;
+    model?: string;
+    temperature?: number;
+    systemPrompt?: string;
+    promptFile?: string;
+  }): Promise<void> {
+    const ipcRenderer = require('electron').ipcRenderer;
+    const { id, message, model, temperature, systemPrompt, promptFile } = payload;
+
+    try {
+      const sessionId = this.getOrCreateApiSession();
+      const session = this.sessions.get(sessionId)!;
+
+      const resolvedModel = model || session.model;
+      const resolvedTemperature = this.clampTemperature(
+        temperature !== undefined ? temperature : session.temperature
+      );
+
+      // Determine system prompt: inline > promptFile > session prompt
+      let resolvedPrompt = session.prompt;
+      if (systemPrompt) {
+        resolvedPrompt = systemPrompt;
+      } else if (promptFile) {
+        resolvedPrompt = await this.loadPromptContent(promptFile);
+      }
+
+      // Add user message with [API] badge
+      const displayMessage = `🔌 **[API]** ${message}`;
+      this.addMessageToSession(sessionId, 'user', displayMessage);
+
+      // Build history for Ollama, stripping the display badge from user messages
+      const history = session.messages
+        .filter(m => m.role === 'user' || m.role === 'assistant')
+        .map(m => ({
+          role: m.role,
+          content: m.role === 'user'
+            ? m.content.replace(/^🔌 \*\*\[API\]\*\* /, '')
+            : m.content,
+        }));
+
+      const chatMessages = [
+        { role: 'system', content: resolvedPrompt },
+        ...history,
+      ];
+
+      const startTime = Date.now();
+      const response = await fetch(`${this.ollamaUrl}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: resolvedModel,
+          messages: chatMessages,
+          stream: false,
+          options: { temperature: resolvedTemperature },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Ollama returned HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      const assistantMessage: string = data.message?.content || 'No response';
+      const duration = (Date.now() - startTime) / 1000;
+
+      this.addMessageToSession(sessionId, 'assistant', assistantMessage, { duration });
+
+      ipcRenderer.send('api-chat-response', { id, response: assistantMessage });
+    } catch (err: any) {
+      ipcRenderer.send('api-chat-response', { id, error: err.message });
+    }
+  }
+
+  // ── end owrap API helpers ──────────────────────────────────────────────────
 
   // Public method to get or create OSM locations session
   public getOrCreateOSMSession(): void {
