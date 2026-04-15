@@ -50,6 +50,12 @@ All data remains private and local.
 - Auto-logged history for reruns and quick tweaks
 - Guardrails: timeouts, output caps, sudo-block to keep runs safe
 
+## \# owrap API
+
+owrap exposes a local REST API on `http://localhost:5050`, available whenever the app is running. It lets external tools, scripts, and agents interact with the same Ollama-backed chat that powers the UI — using the active model, temperature, and system prompt. All API messages are reflected in the app's dedicated **API Session** chat tab.
+
+See [API.md](API.md) for full endpoint reference.
+
 ## \# setup
 
 1. Install dependencies:
