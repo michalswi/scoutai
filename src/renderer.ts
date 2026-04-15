@@ -2328,6 +2328,13 @@ class OwrapApp {
   private ollamaModelContextEl: HTMLElement | null = null;
   private ollamaModelUntilEl: HTMLElement | null = null;
   private systemMonitorInterval: any = null;
+  // Context window tracking
+  private lastPromptTokens: number = 0;
+  private lastResponseTokens: number = 0;
+  private maxContextTokens: number = 0;    // native GGUF value from /api/show (informational)
+  private contextWindowBtn: HTMLButtonElement | null = null;
+  private contextWindowPopover: HTMLElement | null = null;
+  private contextLengthInput: HTMLInputElement | null = null;
   private sessionTabsBar: HTMLElement;
   private addSessionTabBtn: HTMLButtonElement;
   private ollamaProcess: any = null;
@@ -2353,6 +2360,7 @@ class OwrapApp {
     customName?: string;
     model: string;
     temperature: number;
+    ollamaContext: number;
     prompt: string;
     promptSelection: string;
     messages: Array<{role: string, content: string, timestamp?: number, duration?: number}>;
@@ -2383,6 +2391,9 @@ class OwrapApp {
     this.loadBtn = document.getElementById('owrapLoadBtn') as HTMLButtonElement;
     this.newSessionBtn = document.getElementById('owrapNewSessionBtn') as HTMLButtonElement;
     this.clearBtn = document.getElementById('owrapClearBtn') as HTMLButtonElement;
+    this.contextWindowBtn = document.getElementById('owrapContextWindowBtn') as HTMLButtonElement | null;
+    this.contextWindowPopover = document.getElementById('owrapContextWindowPopover') as HTMLElement | null;
+    this.contextLengthInput = document.getElementById('owrapContextLengthInput') as HTMLInputElement | null;
     this.recentPromptsSelect = document.getElementById('recentPromptsSelect') as HTMLSelectElement;
     this.clearRecentPromptsBtn = document.getElementById('clearRecentPromptsBtn') as HTMLButtonElement;
     this.toggleControlsBtn = document.getElementById('toggleControlsBtn') as HTMLButtonElement;
@@ -2644,6 +2655,35 @@ Never include backticks, comments, or extra keys.`;
       console.log('Clear Chat button clicked!');
       this.clearChat();
     });
+    if (this.contextWindowBtn && this.contextWindowPopover) {
+      this.contextWindowBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const popover = this.contextWindowPopover!;
+        if (popover.style.display === 'none' || !popover.style.display) {
+          const used = this.lastPromptTokens + this.lastResponseTokens;
+          const session = this.sessions.get(this.currentSessionId);
+          const max = session?.ollamaContext ?? 8192;
+          const pct = max > 0 ? Math.round((used / max) * 100) : 0;
+          this.renderContextPopover(used, max, pct);
+          popover.style.display = 'block';
+        } else {
+          popover.style.display = 'none';
+        }
+      });
+      document.addEventListener('click', () => {
+        if (this.contextWindowPopover) this.contextWindowPopover.style.display = 'none';
+      });
+    }
+    if (this.contextLengthInput) {
+      this.contextLengthInput.addEventListener('change', () => {
+        const v = parseInt(this.contextLengthInput!.value, 10);
+        const val = isNaN(v) || v <= 0 ? 8192 : v;
+        this.contextLengthInput!.value = String(val);
+        const session = this.sessions.get(this.currentSessionId);
+        if (session) session.ollamaContext = val;
+        this.updateContextWindowBtn();
+      });
+    }
     this.addSessionTabBtn.addEventListener('click', () => this.createNewSessionTab());
     this.showPromptBtn.addEventListener('click', () => this.showSystemPrompt());
     this.refreshModelsBtn.addEventListener('click', () => this.loadAvailableModels());
@@ -2927,6 +2967,9 @@ Never include backticks, comments, or extra keys.`;
     console.log('Model selected:', this.model);
     this.currentModelDisplay.textContent = this.model;
     
+    // Refresh context window max for the newly selected model
+    this.fetchMaxContext(this.model);
+
     // Update current session's model
     const session = this.sessions.get(this.currentSessionId);
     if (session) {
@@ -3363,6 +3406,75 @@ Never include backticks, comments, or extra keys.`;
     }
   }
 
+  private async fetchMaxContext(model: string): Promise<void> {
+    if (!model) return;
+    try {
+      const response = await fetch(`${this.ollamaUrl}/api/show`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: model }),
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      // Architecture-agnostic: find any key ending in '.context_length' (llama, qwen2, gemma, mistral, etc.)
+      let ctx: number | undefined;
+      if (data?.model_info && typeof data.model_info === 'object') {
+        const ctxKey = Object.keys(data.model_info).find(k => k.endsWith('.context_length'));
+        if (ctxKey) ctx = data.model_info[ctxKey];
+      }
+      if (ctx && typeof ctx === 'number' && ctx > 0) {
+        this.maxContextTokens = ctx;
+        this.updateContextWindowBtn();
+      }
+    } catch (e) {
+      console.warn('fetchMaxContext failed:', e);
+    }
+  }
+
+  private updateContextWindowBtn(): void {
+    if (!this.contextWindowBtn) return;
+    const used = this.lastPromptTokens + this.lastResponseTokens;
+    // Use the current session's ollamaContext as the denominator
+    const session = this.sessions.get(this.currentSessionId);
+    const max = session?.ollamaContext ?? 8192;
+    if (max === 0) {
+      this.contextWindowBtn.textContent = '📊';
+      this.contextWindowBtn.title = 'Context window: unknown';
+      this.contextWindowBtn.style.color = '';
+      return;
+    }
+    const pct = Math.round((used / max) * 100);
+    this.contextWindowBtn.textContent = `📊 ${pct}%`;
+    this.contextWindowBtn.title = `Context: ${used.toLocaleString()} / ${max.toLocaleString()} tokens (${pct}%)`;
+    if (pct >= 80) {
+      this.contextWindowBtn.style.color = '#ef4444';
+    } else if (pct >= 50) {
+      this.contextWindowBtn.style.color = '#f59e0b';
+    } else {
+      this.contextWindowBtn.style.color = '#10b981';
+    }
+    // Update popover if visible
+    if (this.contextWindowPopover && this.contextWindowPopover.style.display !== 'none') {
+      this.renderContextPopover(used, max, pct);
+    }
+  }
+
+  private renderContextPopover(used: number, max: number, pct: number): void {
+    if (!this.contextWindowPopover) return;
+    const nativeNote = this.maxContextTokens > 0 && this.maxContextTokens !== max
+      ? `<div class="ctx-popover-sub">model native: ${this.maxContextTokens.toLocaleString()} tokens</div>`
+      : '';
+    this.contextWindowPopover.innerHTML = `
+      <div class="ctx-popover-title">Context Window</div>
+      <div class="ctx-popover-bar-wrap">
+        <div class="ctx-popover-bar" style="width:${pct}%;background:${pct>=80?'#ef4444':pct>=50?'#f59e0b':'#10b981'}"></div>
+      </div>
+      <div class="ctx-popover-stats">${used.toLocaleString()} / ${max.toLocaleString()} tokens &nbsp; <strong>${pct}%</strong></div>
+      <div class="ctx-popover-sub">prompt: ${this.lastPromptTokens.toLocaleString()} &nbsp;·&nbsp; reply: ${this.lastResponseTokens.toLocaleString()}</div>
+      ${nativeNote}
+    `;
+  }
+
   private async checkOllamaStatus(): Promise<void> {
     try {
       const controller = new AbortController();
@@ -3405,6 +3517,8 @@ Never include backticks, comments, or extra keys.`;
           this.loadingModels = true;
           try {
             await this.loadAvailableModels();
+            // Fetch context length for the current model after models are loaded
+            this.fetchMaxContext(this.modelSelect?.value || this.model);
           } catch (e) {
             console.warn('Auto-refresh models failed:', e);
             this.loadingModels = false;
@@ -3788,6 +3902,7 @@ Never include backticks, comments, or extra keys.`;
       customName: '🔌 API Session',
       model: this.modelSelect?.value || this.model,
       temperature: this.clampTemperature(this.temperature),
+      ollamaContext: 8192,
       prompt: this.currentPrompt || this.getDefaultPrompt(),
       promptSelection: this.promptSelect?.value || 'default',
       messages: [] as Array<{ role: string; content: string; timestamp?: number; duration?: number }>,
@@ -3908,6 +4023,10 @@ Never include backticks, comments, or extra keys.`;
       const data = await response.json();
       const assistantMessage: string = data.message?.content || 'No response';
       const duration = (Date.now() - startTime) / 1000;
+      // Update context window tracking
+      if (data.prompt_eval_count != null) this.lastPromptTokens = data.prompt_eval_count;
+      if (data.eval_count != null) this.lastResponseTokens = data.eval_count;
+      this.updateContextWindowBtn();
 
       this.addMessageToSession(sessionId, 'assistant', assistantMessage, { duration });
 
@@ -3939,6 +4058,7 @@ Never include backticks, comments, or extra keys.`;
       customName: '📍 OSM Locations',
       model: this.modelSelect?.value || this.model,
       temperature: this.clampTemperature(this.temperature),
+      ollamaContext: 8192,
       prompt: 'You are a helpful assistant specialized in providing information about locations, places, cities, and geographic features. Answer questions naturally and concisely. When asked about places, provide useful information about attractions, history, culture, and practical tips.',
       promptSelection: 'osm_locations',
       messages: [] as Array<{role: string, content: string, timestamp?: number, duration?: number}>,
@@ -4046,6 +4166,10 @@ Never include backticks, comments, or extra keys.`;
 
       const data = await response.json();
       const assistantMessage = data.message?.content || 'No response';
+      // Update context window tracking
+      if (data.prompt_eval_count != null) this.lastPromptTokens = data.prompt_eval_count;
+      if (data.eval_count != null) this.lastResponseTokens = data.eval_count;
+      this.updateContextWindowBtn();
 
       // Add assistant message to chat
       session.messages.push({ 
@@ -4143,6 +4267,10 @@ Never include backticks, comments, or extra keys.`;
 
       const data = await response.json();
       const assistantMessage = data.message?.content || 'No response';
+      // Update context window tracking
+      if (data.prompt_eval_count != null) this.lastPromptTokens = data.prompt_eval_count;
+      if (data.eval_count != null) this.lastResponseTokens = data.eval_count;
+      this.updateContextWindowBtn();
       
       // Calculate duration
       const duration = (Date.now() - startTime) / 1000;
@@ -4228,6 +4356,7 @@ Never include backticks, comments, or extra keys.`;
       customName: undefined,
       model: inheritedModel,
       temperature: inheritedTemperature,
+      ollamaContext: 8192,
       prompt: inheritedPrompt,
       promptSelection: inheritedPromptSelection,
       messages: [] as Array<{role: string, content: string, timestamp?: number, duration?: number}>,
@@ -4316,6 +4445,10 @@ Never include backticks, comments, or extra keys.`;
     this.currentModelDisplay.textContent = session.model;
     this.promptSelect.value = session.promptSelection;
     this.setTemperatureControls(this.temperature);
+    if (this.contextLengthInput) {
+      this.contextLengthInput.value = String(session.ollamaContext ?? 8192);
+    }
+    this.updateContextWindowBtn();
     
     // Update tab UI
     document.querySelectorAll('.session-tab').forEach(tab => {
@@ -4418,6 +4551,7 @@ Never include backticks, comments, or extra keys.`;
         customName: session.customName,
         model: session.model,
         temperature: session.temperature,
+        ollamaContext: session.ollamaContext,
         prompt: session.prompt,
         promptSelection: session.promptSelection,
         messages: session.messages,
@@ -4574,6 +4708,7 @@ Never include backticks, comments, or extra keys.`;
         customName: session.customName,
         model: session.model,
         temperature: session.temperature,
+        ollamaContext: session.ollamaContext,
         prompt: session.prompt,
         promptSelection: session.promptSelection,
         messages: session.messages,
@@ -4680,6 +4815,7 @@ Never include backticks, comments, or extra keys.`;
         // Update session data from file
         existingSession.model = chatData.model || this.model;
         existingSession.temperature = this.clampTemperature(chatData.temperature ?? existingSession.temperature ?? this.temperature ?? 0.4);
+        existingSession.ollamaContext = chatData.ollamaContext ?? existingSession.ollamaContext ?? 8192;
         existingSession.prompt = chatData.prompt || this.currentPrompt;
         existingSession.promptSelection = chatData.promptSelection || this.promptSelect.value;
         existingSession.messages = chatData.messages || [];
@@ -4695,6 +4831,7 @@ Never include backticks, comments, or extra keys.`;
           customName,
           model: chatData.model || this.model,
           temperature: this.clampTemperature(chatData.temperature ?? this.temperature ?? 0.4),
+          ollamaContext: chatData.ollamaContext ?? 8192,
           prompt: chatData.prompt || this.currentPrompt,
           promptSelection: chatData.promptSelection || this.promptSelect.value,
           messages: chatData.messages || [],

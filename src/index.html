@@ -226,6 +226,11 @@
                 <button id="temperatureInfoBtn" class="model-info-btn" title="Temperature guidance">💡 info</button>
               </div>
             </div>
+
+            <div class="status-row">
+              <span class="status-label" title="Match your OLLAMA_CONTEXT_LENGTH setting (per session)">Ollama context:</span>
+              <input type="number" id="owrapContextLengthInput" min="512" step="512" value="8192" title="Context window size — match OLLAMA_CONTEXT_LENGTH (per session)" style="width:90px; padding:4px 6px; border:1px solid var(--input-border); border-radius:5px; background:var(--input-bg); color:var(--text-primary); font-size:13px;" />
+            </div>
             
             <div class="status-row">
               <span class="status-label">System Prompt:</span>
@@ -377,6 +382,10 @@
             <button id="owrapLoadBtn" class="owrap-load-btn">📂 Load</button>
             <button id="owrapNewSessionBtn" class="owrap-newsession-btn">🆕 NewS</button>
             <button id="owrapClearBtn" class="owrap-clear-btn">🗑️ Clear Chat</button>
+            <div class="ctx-window-wrap">
+              <button id="owrapContextWindowBtn" class="owrap-ctx-btn" title="Context window usage">📊</button>
+              <div id="owrapContextWindowPopover" class="ctx-popover" style="display:none;"></div>
+            </div>
           </div>
         </div>
           </div><!-- End owrap-content-area -->
