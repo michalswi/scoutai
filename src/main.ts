@@ -34,6 +34,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  app.userAgentFallback = 'scoutai/1.1.0 (https://github.com/michalswi/scoutai)';
   createWindow();
 
   // Start owrap API server
