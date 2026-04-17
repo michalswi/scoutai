@@ -2352,7 +2352,7 @@ class OwrapApp {
   private toggleOwrapPanelBtn: HTMLButtonElement | null = null;
   private toggleOwrapPanelFloatBtn: HTMLButtonElement | null = null;
   private resizeHandleLeft: HTMLElement | null = null;
-  private isLeftPanelCollapsed: boolean = false;
+  private isLeftPanelCollapsed: boolean = true;
   
   // Session management
   private sessions: Map<number, {
@@ -2437,6 +2437,15 @@ class OwrapApp {
     this.toggleOwrapPanelBtn = document.getElementById('toggleOwrapPanelBtn') as HTMLButtonElement | null;
     this.toggleOwrapPanelFloatBtn = document.getElementById('toggleOwrapPanelFloatBtn') as HTMLButtonElement | null;
     this.resizeHandleLeft = document.querySelector('.resize-handle-horizontal-left') as HTMLElement | null;
+
+    // Apply default collapsed state
+    if (this.owrapLeftPanel) {
+      this.owrapLeftPanel.classList.add('collapsed');
+    }
+    if (this.toggleOwrapPanelBtn) {
+      this.toggleOwrapPanelBtn.textContent = '▶';
+      this.toggleOwrapPanelBtn.title = 'Show panel';
+    }
 
     this.loadControlsState();
     this.loadRecentPrompts();
