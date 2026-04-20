@@ -121,6 +121,19 @@ export function startApiServer(getWindow: () => BrowserWindow | null, appPath: s
           return;
         }
 
+        if (temperature !== undefined && (typeof temperature !== 'number' || temperature < 0 || temperature > 1)) {
+          sendJson(res, 400, { error: '"temperature" must be a number between 0.0 and 1.0' });
+          return;
+        }
+
+        if (promptFile !== undefined && typeof promptFile === 'string') {
+          const available = getPromptFiles(appPath);
+          if (!available.includes(promptFile)) {
+            sendJson(res, 400, { error: `"promptFile" not found: ${promptFile}` });
+            return;
+          }
+        }
+
         if (!cachedState.ollamaConnected) {
           sendJson(res, 503, { error: 'Ollama is not connected' });
           return;

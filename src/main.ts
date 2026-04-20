@@ -1,7 +1,7 @@
 import { app, BrowserWindow } from 'electron';
 import * as path from 'path';
 import * as remote from '@electron/remote/main';
-import { startApiServer } from './api-server';
+import { startApiServer } from './api-server.js';
 
 // Initialize remote module
 remote.initialize();
