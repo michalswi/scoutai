@@ -19,6 +19,14 @@ Standalone desktop copilot that blends local Ollama chat, multi-map intelligence
 
 The status light will turn green when connected (visible in ***owrap tab*** and ***Ollama Controls*** section).
 
+**Context Window**: owrap tracks context window usage per session via the `📊` button in the chat toolbar. Each session has an ***Ollama context*** field (default `32768`) in the ***session [model] configuration*** section. **This value must match the `OLLAMA_CONTEXT_LENGTH` you used when starting Ollama.** If they differ, the percentage shown will be incorrect.
+
+Example — if you start Ollama with:
+```bash
+OLLAMA_CONTEXT_LENGTH=16384 ollama serve
+```
+Set ***Ollama context*** to `16384` in each session. The setting is saved per session and persisted to disk.
+
 **Data Storage**: ScoutAI stores all application data locally on your machine at `~/Downloads/scoutai/`
   - Chat sessions and conversation history
   - Saved map locations and pins
@@ -49,6 +57,12 @@ All data remains private and local.
 - Fire off zsh commands with streaming output and timers
 - Auto-logged history for reruns and quick tweaks
 - Guardrails: timeouts, output caps, sudo-block to keep runs safe
+
+## \# owrap API
+
+owrap exposes a local REST API on `http://localhost:5050`, available whenever the app is running. It lets external tools, scripts, and agents interact with the same Ollama-backed chat that powers the UI — using the active model, temperature, and system prompt. All API messages are reflected in the app's dedicated **API Session** chat tab.
+
+See [API.md](API.md) for full endpoint reference.
 
 ## \# setup
 

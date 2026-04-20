@@ -1,12 +1,15 @@
 import { app, BrowserWindow } from 'electron';
 import * as path from 'path';
 import * as remote from '@electron/remote/main';
+import { startApiServer } from './api-server.js';
 
 // Initialize remote module
 remote.initialize();
 
+let mainWindow: BrowserWindow | null = null;
+
 function createWindow() {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1600,
     height: 1000,
     webPreferences: {
@@ -21,13 +24,22 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, '../src/index.html'));
 
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+
   // # DevTools
   // Open DevTools in development (optional)
   // mainWindow.webContents.openDevTools();
 }
 
 app.whenReady().then(() => {
+  app.userAgentFallback = 'scoutai/1.1.0 (https://github.com/michalswi/scoutai)';
   createWindow();
+
+  // Start owrap API server
+  const appPath = app.isPackaged ? path.dirname(app.getAppPath()) : process.cwd();
+  startApiServer(() => mainWindow, appPath);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -41,3 +53,4 @@ app.on('window-all-closed', () => {
     app.quit();
   }
 });
+

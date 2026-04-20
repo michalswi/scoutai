@@ -1,7 +1,7 @@
 {
   "name": "scoutai",
-  "version": "1.1.0",
-  "description": "Simple TypeScript GUI desktop application",
+  "version": "1.2.0",
+  "description": "scoutai is ollama based desktop app for macOS and linux",
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc && tsc -p tsconfig.main.json",

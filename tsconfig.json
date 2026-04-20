@@ -10,8 +10,8 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node"
+    "moduleResolution": "bundler"
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "src/main.ts"]
+  "exclude": ["node_modules", "src/main.ts", "src/api-server.ts"]
 }

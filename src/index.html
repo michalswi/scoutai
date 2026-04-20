@@ -10,10 +10,6 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="dark-mode">
-  <button id="themeToggle" class="theme-toggle" title="Toggle Light/Dark Mode">
-    <span class="theme-icon">☀️</span>
-  </button>
-  
   <div class="app-container">
     <!-- Tabbed Interface -->
     <div class="section main-section">
@@ -22,6 +18,10 @@
         <button class="tab-btn" data-tab="osm">🗺️ OpenStreetMap</button>
         <button class="tab-btn" data-tab="google">🌎 Google Maps <span id="gmapsTabStatus" class="tab-status-light"></span></button>
         <button class="tab-btn" data-tab="script">⚡ Shell Executor</button>
+        <div style="flex:1"></div>
+        <button id="themeToggle" class="theme-toggle" title="Toggle Light/Dark Mode">
+          <span class="theme-icon">☀️</span>
+        </button>
       </div>
 
       <!-- OSM Tab Content -->
@@ -226,6 +226,11 @@
                 <button id="temperatureInfoBtn" class="model-info-btn" title="Temperature guidance">💡 info</button>
               </div>
             </div>
+
+            <div class="status-row">
+              <span class="status-label" title="Match your OLLAMA_CONTEXT_LENGTH setting (per session)">Ollama context:</span>
+              <input type="number" id="owrapContextLengthInput" min="512" step="512" value="32768" title="Context window size — match OLLAMA_CONTEXT_LENGTH (per session)" style="width:90px; padding:4px 6px; border:1px solid var(--input-border); border-radius:5px; background:var(--input-bg); color:var(--text-primary); font-size:13px;" />
+            </div>
             
             <div class="status-row">
               <span class="status-label">System Prompt:</span>
@@ -300,7 +305,7 @@
                     <tr>
                       <td><input type="checkbox" id="envOLLAMA_CONTEXT_LENGTH" /></td>
                       <td><label for="envOLLAMA_CONTEXT_LENGTH">OLLAMA_CONTEXT_LENGTH</label></td>
-                      <td><input type="text" id="envValOLLAMA_CONTEXT_LENGTH" value="8192" class="ollama-env-input" /></td>
+                      <td><input type="text" id="envValOLLAMA_CONTEXT_LENGTH" value="32768" class="ollama-env-input" /></td>
                     </tr>
                     <tr>
                       <td><input type="checkbox" id="envOLLAMA_KEEP_ALIVE" /></td>
@@ -310,7 +315,7 @@
                     <tr>
                       <td><input type="checkbox" id="envOLLAMA_KV_CACHE_TYPE" /></td>
                       <td><label for="envOLLAMA_KV_CACHE_TYPE">OLLAMA_KV_CACHE_TYPE</label></td>
-                      <td><input type="text" id="envValOLLAMA_KV_CACHE_TYPE" value="q8_0" class="ollama-env-input" /></td>
+                      <td><input type="text" id="envValOLLAMA_KV_CACHE_TYPE" value="f16" class="ollama-env-input" /></td>
                     </tr>
                     <tr>
                       <td><input type="checkbox" id="envOLLAMA_FLASH_ATTENTION" /></td>
@@ -377,6 +382,10 @@
             <button id="owrapLoadBtn" class="owrap-load-btn">📂 Load</button>
             <button id="owrapNewSessionBtn" class="owrap-newsession-btn">🆕 NewS</button>
             <button id="owrapClearBtn" class="owrap-clear-btn">🗑️ Clear Chat</button>
+            <div class="ctx-window-wrap">
+              <button id="owrapContextWindowBtn" class="owrap-ctx-btn" title="Context window usage">📊</button>
+              <div id="owrapContextWindowPopover" class="ctx-popover" style="display:none;"></div>
+            </div>
           </div>
         </div>
           </div><!-- End owrap-content-area -->
@@ -465,7 +474,7 @@
             </tr>
             <tr>
               <td style="padding: 4px 8px;"><code>OLLAMA_CONTEXT_LENGTH</code></td>
-              <td style="padding: 4px 8px;">8192</td>
+              <td style="padding: 4px 8px;">32768</td>
               <td style="padding: 4px 8px;">Context window size (tokens). Larger values use more VRAM.</td>
             </tr>
             <tr>
@@ -475,8 +484,8 @@
             </tr>
             <tr>
               <td style="padding: 4px 8px;"><code>OLLAMA_KV_CACHE_TYPE</code></td>
-              <td style="padding: 4px 8px;">q8_0</td>
-              <td style="padding: 4px 8px;">KV cache quantization type. <code>q8_0</code> reduces VRAM usage with minimal quality loss; <code>f16</code> for full precision.</td>
+              <td style="padding: 4px 8px;">f16</td>
+              <td style="padding: 4px 8px;">KV cache quantization type. <code>f16</code> for full precision; <code>q8_0</code> reduces VRAM usage with minimal quality loss.</td>
             </tr>
             <tr>
               <td style="padding: 4px 8px;"><code>OLLAMA_FLASH_ATTENTION</code></td>
@@ -516,6 +525,36 @@
       </div>
       <div class="modal-body">
         <div class="model-info-item">
+          <h3><a href="https://ollama.com/library/gemma3" target="_blank">gemma3:4b</a></h3>
+          <p class="model-description">Initial release - March 12, 2025</p>
+          <div class="model-specs">
+            <span class="spec-badge"><strong>Size:</strong> 3.3GB</span>
+            <span class="spec-badge"><strong>Context:</strong> 128k</span>
+            <span class="spec-badge"><strong>Input:</strong> text, image</span>
+          </div>
+          <button class="model-pull-btn" data-model="gemma3:4b" title="Pull this model">📥 Pull</button>
+        </div>
+        <div class="model-info-item">
+          <h3><a href="https://ollama.com/library/gemma4" target="_blank">gemma4:e4b</a></h3>
+          <p class="model-description">Initial release - April 2, 2026</p>
+          <div class="model-specs">
+            <span class="spec-badge"><strong>Size:</strong> 9.6GB</span>
+            <span class="spec-badge"><strong>Context:</strong> 128k</span>
+            <span class="spec-badge"><strong>Input:</strong> text, image</span>
+          </div>
+          <button class="model-pull-btn" data-model="gemma4:e4b" title="Pull this model">📥 Pull</button>
+        </div>
+        <div class="model-info-item">
+          <h3><a href="https://ollama.com/library/gemma4" target="_blank">gemma4:26b</a></h3>
+          <p class="model-description">Initial release - April 2, 2026</p>
+          <div class="model-specs">
+            <span class="spec-badge"><strong>Size:</strong> 18GB</span>
+            <span class="spec-badge"><strong>Context:</strong> 256k</span>
+            <span class="spec-badge"><strong>Input:</strong> text, image</span>
+          </div>
+          <button class="model-pull-btn" data-model="gemma4:26b" title="Pull this model">📥 Pull</button>
+        </div>           
+        <div class="model-info-item">
           <h3><a href="https://ollama.com/library/wizardlm2" target="_blank">wizardlm2:7b</a></h3>
           <p class="model-description">Initial release - April 15, 2024</p>
           <div class="model-specs">
@@ -544,16 +583,6 @@
             <span class="spec-badge"><strong>Input:</strong> text, image</span>
           </div>
           <button class="model-pull-btn" data-model="qwen3.5:9b" title="Pull this model">📥 Pull</button>
-        </div>
-        <div class="model-info-item">
-          <h3><a href="https://ollama.com/library/gemma3" target="_blank">gemma3:4b</a></h3>
-          <p class="model-description">Initial release - March 12, 2025</p>
-          <div class="model-specs">
-            <span class="spec-badge"><strong>Size:</strong> 3.3GB</span>
-            <span class="spec-badge"><strong>Context:</strong> 128k</span>
-            <span class="spec-badge"><strong>Input:</strong> text, image</span>
-          </div>
-          <button class="model-pull-btn" data-model="gemma3:4b" title="Pull this model">📥 Pull</button>
         </div>
         <div class="model-info-item">
           <h3><a href="https://ollama.com/library/gemma3" target="_blank">gemma3:12b</a></h3>
