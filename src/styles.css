@@ -610,7 +610,7 @@ body.dark-mode .script-output { background: #141416; }
 /* Content area */
 .owrap-content-area {
   flex: 1; display: flex; flex-direction: column;
-  overflow-y: auto; position: relative; background: var(--surface-1);
+  overflow: hidden; position: relative; background: var(--surface-1);
 }
 
 /* Session tabs */
@@ -762,9 +762,9 @@ body.dark-mode .ollama-log { background: #141416; }
 @media (max-width:900px) { .system-monitor-grid { grid-template-columns: 1fr; } }
 
 /* Chat area */
-.owrap-chat-container { flex: 2; background: var(--surface-1); border: none; margin-bottom: 0; overflow: visible; display: flex; flex-direction: column; }
+.owrap-chat-container { flex: 1; min-height: 0; background: var(--surface-1); border: none; margin-bottom: 0; overflow: hidden; display: flex; flex-direction: column; }
 .owrap-chat-log {
-  flex: 1 1 auto; padding: 20px 24px; overflow-y: auto; min-height: 120px; resize: vertical;
+  flex: 1 1 auto; min-height: 0; padding: 20px 24px; overflow-y: auto;
   background: var(--surface-1); border: none; border-top: 1px solid var(--separator-opaque); box-sizing: border-box;
 }
 
@@ -819,6 +819,7 @@ body.dark-mode .chat-message pre { background: #141416; border-color: #38383a; }
 /* Input area */
 .owrap-input-section {
   padding: 12px 16px; border-top: 1px solid var(--separator-opaque); background: var(--surface-1);
+  flex-shrink: 0;
 }
 .recent-prompts-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .recent-prompts-row label { font-weight: 600; color: var(--text-tertiary); font-size: 12px; min-width: 52px; }

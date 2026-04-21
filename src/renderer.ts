@@ -2290,6 +2290,7 @@ class OwrapApp {
   private infoBtn: HTMLButtonElement;
   private focusModeBtn: HTMLButtonElement;
   private fitBtn: HTMLButtonElement;
+
   private saveBtn: HTMLButtonElement;
   private loadBtn: HTMLButtonElement;
   private newSessionBtn: HTMLButtonElement;
@@ -4586,21 +4587,16 @@ Never include backticks, comments, or extra keys.`;
     // Remove all inline sizing styles
     this.chatLog.style.removeProperty('min-height');
     this.chatLog.style.removeProperty('max-height');
+    this.chatLog.style.removeProperty('height');
     this.chatLog.style.removeProperty('flex');
     this.chatLog.style.removeProperty('flex-grow');
     this.chatLog.style.removeProperty('flex-shrink');
     this.chatLog.style.removeProperty('flex-basis');
     
-    // Set to fixed default height
-    this.chatLog.style.height = this.defaultChatLogHeight;
-    
-    // Force reflow
-    void this.chatLog.offsetHeight;
-    
     // Scroll to bottom to show latest messages
     this.chatLog.scrollTop = this.chatLog.scrollHeight;
     
-    console.log('Fit complete - reset to default size:', this.defaultChatLogHeight);
+    console.log('Fit complete');
   }
 
   private toggleFocusMode(): void {
