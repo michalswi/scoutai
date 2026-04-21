@@ -2289,7 +2289,7 @@ class OwrapApp {
   private abortController: AbortController | null = null;
   private infoBtn: HTMLButtonElement;
   private focusModeBtn: HTMLButtonElement;
-  private fitBtn: HTMLButtonElement;
+
   private saveBtn: HTMLButtonElement;
   private loadBtn: HTMLButtonElement;
   private newSessionBtn: HTMLButtonElement;
@@ -2386,7 +2386,6 @@ class OwrapApp {
     this.stopBtn = document.getElementById('owrapStopBtn') as HTMLButtonElement;
     this.infoBtn = document.getElementById('owrapInfoBtn') as HTMLButtonElement;
     this.focusModeBtn = document.getElementById('owrapFocusModeBtn') as HTMLButtonElement;
-    this.fitBtn = document.getElementById('owrapFitBtn') as HTMLButtonElement;
     this.saveBtn = document.getElementById('owrapSaveBtn') as HTMLButtonElement;
     this.loadBtn = document.getElementById('owrapLoadBtn') as HTMLButtonElement;
     this.newSessionBtn = document.getElementById('owrapNewSessionBtn') as HTMLButtonElement;
@@ -2649,12 +2648,6 @@ Never include backticks, comments, or extra keys.`;
       if (this.abortController) {
         this.abortController.abort();
       }
-    });
-    this.fitBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log('Fit button clicked');
-      this.fitChatLog();
     });
     this.saveBtn.addEventListener('click', () => this.saveChatHistory());
     this.focusModeBtn.addEventListener('click', () => this.toggleFocusMode());
@@ -4228,7 +4221,6 @@ Never include backticks, comments, or extra keys.`;
     this.stopBtn.style.display = '';
     this.infoBtn.disabled = true;
     this.focusModeBtn.disabled = true;
-    this.fitBtn.disabled = true;
     this.saveBtn.disabled = true;
     this.loadBtn.disabled = true;
     this.newSessionBtn.disabled = true;
@@ -4310,7 +4302,6 @@ Never include backticks, comments, or extra keys.`;
       this.stopBtn.style.display = 'none';
       this.infoBtn.disabled = false;
       this.focusModeBtn.disabled = false;
-      this.fitBtn.disabled = false;
       this.saveBtn.disabled = false;
       this.loadBtn.disabled = false;
       this.newSessionBtn.disabled = false;
@@ -4575,32 +4566,6 @@ Never include backticks, comments, or extra keys.`;
     } catch (error: any) {
       console.error('Auto-save error:', error);
     }
-  }
-
-  private fitChatLog(): void {
-    if (!this.chatLog) {
-      console.error('chatLog element is null or undefined!');
-      return;
-    }
-    
-    // Remove all inline sizing styles
-    this.chatLog.style.removeProperty('min-height');
-    this.chatLog.style.removeProperty('max-height');
-    this.chatLog.style.removeProperty('flex');
-    this.chatLog.style.removeProperty('flex-grow');
-    this.chatLog.style.removeProperty('flex-shrink');
-    this.chatLog.style.removeProperty('flex-basis');
-    
-    // Set to fixed default height
-    this.chatLog.style.height = this.defaultChatLogHeight;
-    
-    // Force reflow
-    void this.chatLog.offsetHeight;
-    
-    // Scroll to bottom to show latest messages
-    this.chatLog.scrollTop = this.chatLog.scrollHeight;
-    
-    console.log('Fit complete - reset to default size:', this.defaultChatLogHeight);
   }
 
   private toggleFocusMode(): void {

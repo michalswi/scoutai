@@ -610,7 +610,7 @@ body.dark-mode .script-output { background: #141416; }
 /* Content area */
 .owrap-content-area {
   flex: 1; display: flex; flex-direction: column;
-  overflow-y: auto; position: relative; background: var(--surface-1);
+  overflow: hidden; position: relative; background: var(--surface-1);
 }
 
 /* Session tabs */
@@ -762,9 +762,9 @@ body.dark-mode .ollama-log { background: #141416; }
 @media (max-width:900px) { .system-monitor-grid { grid-template-columns: 1fr; } }
 
 /* Chat area */
-.owrap-chat-container { flex: 2; background: var(--surface-1); border: none; margin-bottom: 0; overflow: visible; display: flex; flex-direction: column; }
+.owrap-chat-container { flex: 1; min-height: 0; background: var(--surface-1); border: none; margin-bottom: 0; overflow: hidden; display: flex; flex-direction: column; }
 .owrap-chat-log {
-  flex: 1 1 auto; padding: 20px 24px; overflow-y: auto; min-height: 120px; resize: vertical;
+  flex: 1 1 auto; min-height: 0; padding: 20px 24px; overflow-y: auto;
   background: var(--surface-1); border: none; border-top: 1px solid var(--separator-opaque); box-sizing: border-box;
 }
 
@@ -819,6 +819,7 @@ body.dark-mode .chat-message pre { background: #141416; border-color: #38383a; }
 /* Input area */
 .owrap-input-section {
   padding: 12px 16px; border-top: 1px solid var(--separator-opaque); background: var(--surface-1);
+  flex-shrink: 0;
 }
 .recent-prompts-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .recent-prompts-row label { font-weight: 600; color: var(--text-tertiary); font-size: 12px; min-width: 52px; }
@@ -841,6 +842,7 @@ body.dark-mode .chat-message pre { background: #141416; border-color: #38383a; }
 #owrapInput:focus { border-color: var(--fill-primary); background: var(--surface-1); }
 
 .owrap-button-group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.owrap-copyright { width: 100%; text-align: center; color: var(--text-tertiary); font-size: 12px; margin: 8px 0 0; }
 
 .owrap-send-btn {
   padding: 9px 22px; background: var(--fill-primary); color: #ffffff;
@@ -860,7 +862,6 @@ body.dark-mode .chat-message pre { background: #141416; border-color: #38383a; }
 
 .owrap-info-btn,
 .owrap-focus-btn,
-.owrap-fit-btn,
 .owrap-save-btn,
 .owrap-load-btn,
 .owrap-newsession-btn,
@@ -872,7 +873,6 @@ body.dark-mode .chat-message pre { background: #141416; border-color: #38383a; }
 }
 .owrap-info-btn:hover,
 .owrap-focus-btn:hover,
-.owrap-fit-btn:hover,
 .owrap-save-btn:hover,
 .owrap-load-btn:hover,
 .owrap-newsession-btn:hover { background: var(--control-bg-2); color: var(--text-primary); }
@@ -883,7 +883,6 @@ body.dark-mode .chat-message pre { background: #141416; border-color: #38383a; }
 
 .owrap-info-btn:disabled,
 .owrap-focus-btn:disabled,
-.owrap-fit-btn:disabled,
 .owrap-save-btn:disabled,
 .owrap-load-btn:disabled,
 .owrap-newsession-btn:disabled,
@@ -896,7 +895,6 @@ body.focus-mode .ollama-controls-section,
 body.focus-mode .session-tabs-container,
 body.focus-mode .controls-section,
 body.focus-mode .recent-prompts-row,
-body.focus-mode .owrap-fit-btn,
 body.focus-mode .owrap-save-btn,
 body.focus-mode .owrap-load-btn,
 body.focus-mode .owrap-newsession-btn,
