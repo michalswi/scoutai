@@ -842,6 +842,7 @@ body.dark-mode .chat-message pre { background: #141416; border-color: #38383a; }
 #owrapInput:focus { border-color: var(--fill-primary); background: var(--surface-1); }
 
 .owrap-button-group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.owrap-copyright { width: 100%; text-align: center; color: var(--text-tertiary); font-size: 12px; margin: 4px 0 0; }
 
 .owrap-send-btn {
   padding: 9px 22px; background: var(--fill-primary); color: #ffffff;
